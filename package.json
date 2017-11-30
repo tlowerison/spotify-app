@@ -1,0 +1,25 @@
+{
+  "name": "deploy-app",
+  "version": "1.0.0",
+  "description": "My deployable web app.",
+  "engines": {
+    "node": "6.11.5"
+  },
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "body-parser": "^1.18.2",
+    "child_process": "^1.0.2",
+    "cookie-parser": "^1.4.3",
+    "dotenv": "^2.0.0",
+    "ejs": "^2.5.7",
+    "express": "^4.13.4",
+    "lyricist": "^2.2.2",
+    "mongoose": "^4.11.1",
+    "python-shell": "^0.4.0",
+    "querystring": "^0.2.0",
+    "request": "^2.83.0"
+  }
+}
