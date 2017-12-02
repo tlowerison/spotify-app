@@ -3,7 +3,6 @@ Developed by Trey Lowerison<br />
 <br />
 Stack: MongoDB Express AngularJS Node.js Python<br />
 <br />
-There is currently a servor bug, debugging in process.<br />
 Only supported for local use right now.<br />
 Download or clone down, then open a terminal in the folder.<br />
 Run:<br />
