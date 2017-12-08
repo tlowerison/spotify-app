@@ -137,16 +137,11 @@ app.get('/refresh_token', function(req, res) {
 
 app.post('/tracks-svm', function(req, res) {
 	console.log('tracks-svm: ' + req.body.method);
-	if (req.body.method == 'train') {
-		svm.train(req.body.data);
-		res.end();
-	} else if (req.body.method == 'test') {
-		svm.test(req.body.data);
-		res.end();
-	} else if (req.body.method == 'unitTest') {
-		svm.unitTest();
-		res.end();
-	}
+	svm[req.body.method](req.body.data)
+	.then(function(result) {
+		console.log('Sending resulting html element from server');
+		res.send(result);
+	});
 });
 
 console.log('Listening on ' + port);

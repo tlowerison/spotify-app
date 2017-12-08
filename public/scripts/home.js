@@ -1,6 +1,5 @@
 app.controller('HomeCtrl', function($scope, $http, $compile) {
 	$(document).ready(function() {
-		console.log('hello!');
 		// AUTHORIZATION
 			// Retrieves access_token and refresh_token from server
 			setSpotifyAccess();
@@ -43,6 +42,7 @@ app.controller('HomeCtrl', function($scope, $http, $compile) {
 
 				var albumtrackspromise = new Promise(function(resolve) {
 					var k = 0;
+					if (allAlbumTrackIds.length == 0) resolve();
 					while (k < allAlbumTrackIds.length) {
 						var queryIds = allAlbumTrackIds.slice(k, Math.min(k + 50, allAlbumTrackIds.length));
 						$http(get_tracks(queryIds)).then(function(res) {
@@ -53,7 +53,8 @@ app.controller('HomeCtrl', function($scope, $http, $compile) {
 						})
 						k += 50;
 					}
-				})
+				});
+
 				libraryPromises['saved albums'] = {
 					"execute": function(resolve) {
 						albumtrackspromise.then(function() {
@@ -136,6 +137,7 @@ app.controller('HomeCtrl', function($scope, $http, $compile) {
 						tracklistsLoaded.push(new Promise(function(resolve) {
 							getRecentTracks(resolve);
 						}));
+
 						Promise.all(tracklistsLoaded).then(function() {
 							var overviewPromises = [];
 							overviewPromises.push(new Promise(function(resolve) {
@@ -154,6 +156,7 @@ app.controller('HomeCtrl', function($scope, $http, $compile) {
 								playlistOverviewPromises.push(playlistOverviewPromise);
 							}
 
+
 							Promise.all(playlistOverviewPromises).then(function() {
 								for (var i in $scope.playlists) {
 									function loadFeatures(j) {
@@ -163,6 +166,7 @@ app.controller('HomeCtrl', function($scope, $http, $compile) {
 									loadFeatures(i);
 								}
 							});
+						console.log(overviewPromises);
 							Promise.all(overviewPromises).then(function() {
 								modelStatus("loaded");
 							})
@@ -172,12 +176,18 @@ app.controller('HomeCtrl', function($scope, $http, $compile) {
 			}
 
 			$scope.onUserModelTrainButtonClick = function() {
-				$http.post('/tracks-svm', { method: "train", data: fullFeatures });
+				$http.post('/tracks-svm', { method: "train", data: { features: fullFeatures }})
+				.then(function(res) {
+					$('body').append(res.plt);
+				});
 				modelStatus("trained");
 			}
 
 			$scope.onUserModelUnitTestButtonClick = function() {
-				$http.post('/tracks-svm', { method: "unitTest" });
+				$http.post('/tracks-svm', { method: "unitTest" })
+				.then(function(res) {
+					$('body').append(res.plt);
+				});
 			}
 
 			$scope.onPlotTrackClick = function(features) {
@@ -185,7 +195,10 @@ app.controller('HomeCtrl', function($scope, $http, $compile) {
 				features[8] /= bpmNorm;
 				features[9] /= timeSignatureNorm;
 				features[10] /= popularityNorm;
-				$http.post('/tracks-svm', { method: "test", data: [features] })
+				$http.post('/tracks-svm', { method: "test", data: { features: [features] }})
+				.then(function(res) {
+					$('body').append(res.plt);
+				});
 			}
 
 			$scope.onRecentTracksClick = function() {
@@ -236,13 +249,23 @@ app.controller('HomeCtrl', function($scope, $http, $compile) {
 			$scope.onFeaturesModelButtonClick = function(playlist_id, method) {
 				var body = { method: method };
 				if (playlist_id == 'saved tracks') {
-					body.data = $scope.savedTracks.overview.features;
+					body.data = {
+						features: $scope.savedTracks.overview.features
+					};
 				} else if (playlist_id == 'saved albums') {
-					 body.data = $scope.savedAlbums.overview.features;
+					 body.data = {
+					 	features: $scope.savedAlbums.overview.features
+					 };
 				} else {
-					body.data = $scope.playlists[playlist_id_to_index[playlist_id]].overview.features;
+					body.data = {
+						features: $scope.playlists[playlist_id_to_index[playlist_id]].overview.features
+					};
 				}
-				$http.post('/tracks-svm', body);
+
+				$http.post('/tracks-svm', body)
+				.then(function(res) {
+					$('body').append(res.plt);
+				});
 			}
 	});
 
@@ -409,6 +432,7 @@ app.controller('HomeCtrl', function($scope, $http, $compile) {
 			}
 
 			function appendToFullFeatures(arr) {
+				if (arr == undefined) return;
 				fullFeatures = fullFeatures.concat(arr);
 			}
 
@@ -572,12 +596,6 @@ app.controller('HomeCtrl', function($scope, $http, $compile) {
 
 			function parseTracklistFeatures(tracklist) {
 				return new Promise(function(RESOLVE) {
-					var trackIds = tracklist.map(function(t) {
-						if (typeof t.track_id == "undefined")
-							return t.id;
-						else
-							return t.track_id;
-					});
 					var features = [];
 					var avgFeatures = {
 						"danceability": 0,
@@ -596,6 +614,18 @@ app.controller('HomeCtrl', function($scope, $http, $compile) {
 						"popularity": 0
 					}
 
+					if (tracklist.length == 0) {
+						RESOLVE(features, avgFeatures);
+						return;
+					}
+
+					var trackIds = tracklist.map(function(t) {
+						if (typeof t.track_id == "undefined")
+							return t.id;
+						else
+							return t.track_id;
+					});
+
 					var promises = [];
 					var i = 0;
 					while (i < trackIds.length) {
@@ -610,6 +640,12 @@ app.controller('HomeCtrl', function($scope, $http, $compile) {
 					}
 					Promise.all(promises).then(function() {
 						for (var i = 0; i < features.length; i += 1) {
+							if (features[i] == null) {
+								features.splice(i, 1);
+								tracklist.splice(i, 1);
+								i -= 1;
+								continue;
+							}
 							features[i].popularity = tracklist[i].popularity;
 						}
 
