@@ -7,6 +7,9 @@ var app = angular.module("MyApp", ["ngRoute", "cp.ngConfirm"])
 	.when("/", {
 		templateUrl: "views/home.html"
 	})
+	.when("/_=_", {
+		templateUrl: "views/home.html"
+	})
 	.when("/library", {
 		templateUrl: "views/library.html",
 		controller: "Library",
