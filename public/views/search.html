@@ -1,0 +1,85 @@
+<!-- Search -->
+<div class="row" ng-init="init()">
+	<div class="col-sm-12 section" style="margin: 20px">
+		<div class="mdc-text-field">
+			<input type="text" id="search-input" class="mdc-text-field__input" size="25" style="font-size: 200%; font-weight: 500" placeholder="Search" autocomplete="off">
+			<div class="mdc-text-field__bottom-line"></div>
+		</div>
+	</div>
+	<div id="search-results">
+		<div id="search-tracks" class="col-sm-12">
+			<div class="section">
+				<h3>Tracks</h3>
+			</div>
+			<ul>
+				<li class="subtitle" ng-repeat="track in searchResults.tracks" ng-click="onSearchItemClick('tracks', this)">{{track.name}}</li>
+			</ul>
+		</div>
+		<div id="search-albums" class="col-sm-12">
+			<div class="section">
+				<h3>Albums</h3>
+			</div>
+			<ul>
+				<li class="subtitle" ng-repeat="album in searchResults.albums" ng-click="onSearchItemClick('albums', this)"><a href="/album/{{album.id}}" class="plain-link">{{album.name}}</a></li>
+			</ul>
+		</div>
+		<div id="search-artists" class="col-sm-12">
+			<div class="section">
+				<h3>Artists</h3>
+			</div>
+			<ul>
+				<li class="subtitle" ng-repeat="artist in searchResults.artists" ng-click="onSearchItemClick('artists', this)"><!--<a href="/artist/{{artist.id}}" class="plain-link">-->{{artist.name}}<!--</a>--></li>
+			</ul>
+		</div>
+		<div id="search-playlists" class="col-sm-12">
+			<div class="section">
+				<h3>Playlists</h3>
+			</div>
+			<ul>
+				<li class="subtitle" ng-repeat="playlist in searchResults.playlists" ng-click="onSearchItemClick('playlists', this)"><a href="/user/{{playlist.owner.id}}/playlist/{{playlist.id}}" class="plain-link">{{playlist.name}}</li>
+			</ul>
+		</div>
+	</div>
+	<div id="search-item" class="section">
+		<h3><br />{{searchItem.name}}</h3>
+		<div id="search-item-track">
+			<h4 ng-repeat="artist in searchItem.artists">{{artist.name}}</h4>
+			<div class="section">
+				<input type="button" value="Plot Track" ng-click="onPlotTrackClick([searchItem.danceability,searchItem.energy,searchItem.loudness,searchItem.speechiness,searchItem.acousticness,searchItem.instrumentalness,searchItem.liveness,searchItem.valence,searchItem.tempo,searchItem.time_signature,searchItem.popularity])"/>
+			</div>
+
+			<br />
+			<h4>Danceability: {{searchItem.danceability}}</h4>
+			<h4>Energy: {{searchItem.energy}}</h4>
+			<h4>Key: {{searchItem.key}}</h4>
+			<h4>Loudness: {{searchItem.loudness}}</h4>
+			<h4>Mode: {{searchItem.mode}}</h4>
+			<h4>Speechiness: {{searchItem.speechiness}}</h4>
+			<h4>Acousticness: {{searchItem.acousticness}}</h4>
+			<h4>Instrumentalness: {{searchItem.instrumentalness}}</h4>
+			<h4>Liveness: {{searchItem.liveness}}</h4>
+			<h4>Valence: {{searchItem.valence}}</h4>
+			<h4>Tempo: {{searchItem.tempo}}</h4>
+			<h4>Duration: {{searchItem.duration_ms}}</h4>
+			<h4>Time Signature: {{searchItem.time_signature}}</h4>
+			<h4>{{searchItem.lyrics}}</h4>
+		</div>
+		<div id="search-item-artist">
+			<h4>Related Artists:</h4>
+			<h4 ng-repeat="artist in searchItem.relatedArtists">{{artist.name}}</h4>
+		</div>
+		<div id="search-item-album">
+			<h4>Tracks:</h4>
+			<h4 ng-repeat="track in searchItem.tracks.items">{{track.name}}</h4>
+		</div>
+		<div id="search-item-playlist">
+		</div>
+		<div id="search-item-return">
+			<svg id="arrow" fill="#222222" height="36" viewBox="0 0 24 24" width="36" xmlns="http://www.w3.org/2000/svg">
+				<path d="M0 0h24v24H0z" fill="none"/>
+				<path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/>
+			</svg>
+			<a id="rel" class="subtitle">Return</a>
+		</div>
+	</div>
+</div>

@@ -1,4 +1,3 @@
-var ejs = require('ejs');
 var svm = require('./svm.js');
 var dotenv = require('dotenv');
 var express = require('express');
@@ -9,8 +8,6 @@ var cookieParser = require('cookie-parser');
 
 var app = express();
 app.use(express.static(__dirname + '/public')).use(cookieParser());
-app.set('views', __dirname + '/views');
-app.set('view engine', 'ejs');
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -23,9 +20,8 @@ var client_secret = process.env.CLIENT_SECRET;
 var redirect_uri = 'http://localhost:'+ port + '/callback';
 var scope = 'playlist-read-private playlist-read-collaborative playlist-modify-public playlist-modify-private user-library-read user-library-modify user-read-private user-read-email user-read-birthdate user-follow-read user-follow-modify user-top-read user-read-playback-state user-read-recently-played user-read-currently-playing user-modify-playback-state';
 var stateKey = 'spotify_auth_state';
-var ACCESS_TOKEN = null;
-var REFRESH_TOKEN = null;
-
+var accessToken = null;
+var refreshToken = null;
 
 
 var generateRandomString = function(length) {
@@ -37,7 +33,7 @@ var generateRandomString = function(length) {
 	return text;
 };
 
-app.get('/login', function(req, res) {
+app.get('/spotify-login', function(req, res) {
 	var state = generateRandomString(16);
 	res.cookie(stateKey, state);
 
@@ -76,22 +72,9 @@ app.get('/callback', function(req, res) {
 
 		request.post(authOptions, function(error, response, body) {
 			if (!error && response.statusCode === 200) {
-				var access_token = body.access_token,
-				refresh_token = body.refresh_token;
-				var options = {
-					url: 'https://api.spotify.com/v1/me',
-					headers: { 'Authorization': 'Bearer ' + access_token },
-					json: true
-				};
-
-				// use the access token to access the Spotify Web API
-				request.get(options, function(error, response, body) {
-					//console.log(body);
-				});
-
-				ACCESS_TOKEN = access_token;
-				REFRESH_TOKEN = refresh_token;
-				res.redirect('/home');
+				accessToken = body.access_token;
+				refreshToken = body.refresh_token;
+				res.redirect('/');
 			} else {
 				res.redirect('/#' + querystring.stringify({
 					error: 'invalid_token'
@@ -101,16 +84,22 @@ app.get('/callback', function(req, res) {
 	}
 });
 
-app.get('/home', function(req, res) {
-	res.render('home', {
-		access_token: ACCESS_TOKEN,
-		refresh_token: REFRESH_TOKEN
-	});
+app.get('/tokens', function(req, res) {
+	res.send({
+		accessToken: accessToken,
+		refreshToken: refreshToken
+	})
+});
+
+app.get("/logout", function(req, res) {
+	accessToken = null;
+	refreshToken = null;
+	res.sendFile(__dirname + "/public/index.html");
 });
 
 app.get('/refresh_token', function(req, res) {
 	// requesting access token from refresh token
-	var refresh_token = req.query.refresh_token;
+	var refreshToken = req.query.refreshToken;
 	var authOptions = {
 		url: 'https://accounts.spotify.com/api/token',
 		headers: {
@@ -118,28 +107,48 @@ app.get('/refresh_token', function(req, res) {
 		},
 		form: {
 			grant_type: 'refresh_token',
-			refresh_token: refresh_token
+			refreshToken: refreshToken
 		},
 		json: true
 	};
 
 	request.post(authOptions, function(error, response, body) {
 		if (!error && response.statusCode === 200) {
-			var access_token = body.access_token;
-			ACCESS_TOKEN = access_token;
-			REFRESH_TOKEN = refresh_token;
+			refreshToken = body.refresh_token;
 			res.send({
-				'access_token': access_token
+				refreshToken: refreshToken
 			});
 		}
 	});
 });
 
+// All accessible pages use the basic index
+// Individual pages are designed and provided
+// using AngularJS routing
+app.get('/:page(browse|library|search)', function(req, res) {
+	res.sendFile(__dirname + '/public/index.html');
+});
+
+app.get('/library/:type(playlists|savedalbums|savedtracks|recentlyplayed)', function(req, res) {
+	res.sendFile(__dirname + '/public/index.html');
+})
+
+app.get('/:type(playlist|album|artist|track)/:id', function(req, res) {
+	res.sendFile(__dirname + '/public/index.html');
+});
+
+app.get("/user/:user/playlist/:id", function(req, res) {
+	res.sendFile(__dirname + '/public/index.html');
+})
+
+app.get("/login", function(req, res) {
+	res.sendFile(__dirname + '/public/index.html');
+});
+
 app.post('/tracks-svm', function(req, res) {
 	console.log('tracks-svm: ' + req.body.method);
-	svm[req.body.method](req.body.data)
+	svm[req.body.method](req.body.samples)
 	.then(function(result) {
-		console.log('Sending resulting html element from server');
 		res.send(result);
 	});
 });

@@ -1,38 +1,59 @@
 <!doctype html>
 <html>
 	<head>
-		<title>Spotify Server</title>
+		<title>Noisify</title>
 		<base href="/">
 		<meta charset="utf-8">
 		<meta http-equiv="X-UA-Compatible" content="IE=edge">
 		<meta name="viewport" content="width=device-width, initial-scale=1">
-		<link href="https://fonts.googleapis.com/css?family=Crimson+Text" rel="stylesheet">
-		<!-- Bootstrap CDN -->
-		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+		
+		<!-- JQuery -->
 		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
-		<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
-		<!-- Angular CDN -->
-		<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.4/angular.min.js"></script>
-		<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.4/angular-route.js"></script>
-		<!-- Local Router -->
-		<script src="scripts/app.js"></script>
-		<!-- Stylesheet -->
-		<link href="css/main.css" rel="stylesheet" />
-		<!-- D3.js Library -->
-		<script src="https://d3js.org/d3.v4.min.js"></script>
-	</head>
+		<!-- JQuery Plugins -->
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-easing/1.4.1/jquery.easing.min.js"></script>
+		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery-confirm/3.3.0/jquery-confirm.min.css">
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-confirm/3.3.0/jquery-confirm.min.js"></script>
 
-	<body ng-app="MyApp" ng-controller="Ctrl" ng-init="init()">
-		<div class="container" id="content">
-			<div class="section" class="row">
-				<div class="col-sm-12 col-md-12 col-lg-12">
-					<h1>Spotify Server</h1>
-				</div>
-			</div>
-			<div class="row">
-				<div class="col-sm-12 col-md-12 col-lg-12">
-					<a href="/login" target="_self"><h1 style="text-align: center">Login</h1></a>
-				</div>
+		<!-- Stylesheets -->
+		<link href="css/main.css" rel="stylesheet" />
+		<link href="css/simple-sidebar.css" rel="stylesheet">
+
+		<!-- Bootstrap -->
+			<!-- CDN -->
+			<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+			<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+
+		<!-- Angular & Material -->
+			<!-- CDN -->
+			<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.4/angular.min.js"></script>
+			<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.4/angular-route.js"></script>
+			<!-- Material -->
+			<link href="vendor/mdc/mdc.theme.min.css" rel="stylesheet" />
+			<link href="vendor/mdc/mdc.button.min.css" rel="stylesheet" />
+			<link href="vendor/mdc/mdc.elevation.min.css" rel="stylesheet" />
+			<link href="vendor/mdc/mdc.textfield.min.css" rel="stylesheet" />
+			<script src="vendor/mdc/mdc.textfield.min.js"></script>
+			<!-- Angular Confirm -->
+			<link rel="stylesheet" href="vendor/angular-confirm/angular-confirm.min.css">
+			<script src="vendor/angular-confirm/angular-confirm.min.js"></script>
+			<!-- Router -->
+			<script src="scripts/router.js"></script>
+			<!-- Services -->
+			<script src="scripts/services/loggedInFactory.js"></script>
+			<script src="scripts/services/apiFactory.js"></script>
+			<script src="scripts/services/dataFactory.js"></script>
+			<!-- Controllers -->
+			<script src="scripts/controllers/browse.js"></script>
+			<script src="scripts/controllers/library.js"></script>
+			<script src="scripts/controllers/search.js"></script>
+			<script src="scripts/controllers/object.js"></script>
+			<script src="scripts/controllers/sidebar.js"></script>
+	</head>
+	<body ng-app="MyApp">
+		<div id="wrapper" class="toggled">
+			<ng-include src="'views/sidebar.html'"></ng-include>
+			<div id="page-content-wrapper" class="container-fluid">
+				<div ng-view></div>
 			</div>
 		</div>
 	</body>

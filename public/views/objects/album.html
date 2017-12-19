@@ -1,0 +1,24 @@
+<div id="{{currentObject.id}}-sections" class="row" style="padding-top: 10px">
+	<div class="col-xs-12 col-sm-3">
+		<img class="img-large mdc-elevation--z10 section" src="{{currentObject.object.images[0].url}}">
+		<h3 class="title-med section">{{currentObject.object.name}}</h3>
+		<h4 class="section" style="font-weight: 600; font-size: 2rem">{{currentObject.object.artists[0].name}}</h4>
+		<div class="section" style="margin-bottom: 8px">
+			<button class="mdc-button mdc-button--raised" ng-click="analysisPopUp(currentObject.object.type, currentObject.object.overview.samples)">
+				<h4 class="subtitle">Analysis</h4>
+			</button>
+		</div>
+		<div class="row">
+			<ul style="padding-right: 3vw">
+				<li ng-repeat="(key, value) in currentObject.object.overview.avgFeatures">{{ key }}:<span style="float: right">{{ value | number: 4 }}</span></li>
+			</ul>
+		</div>
+	</div>
+	<div class="col-sm-12 col-sm-9">
+		<ol class="nav nav-list list-group row mdc-elevation--z8" style="margin-right: 2px">
+			<li class="list-group-item col-xs-12" ng-repeat="track in currentObject.object.tracks" style="padding-top: 0; padding-bottom: 0; display: inline-block;">
+				<h5><span style="font-size: 110%; font-weight: 500">{{track.name}}</span></h5>
+			</li>
+		</ol>
+	</div>
+</div>
