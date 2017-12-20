@@ -8,7 +8,12 @@ var app = angular.module("MyApp", ["ngRoute", "cp.ngConfirm"])
 		templateUrl: "views/home.html"
 	})
 	.when("/_=_", {
-		templateUrl: "views/home.html"
+		templateUrl: "views/home.html",
+		resolve: {
+			redirect: function($location) {
+				$location.path("/");
+			}
+		}
 	})
 	.when("/library", {
 		templateUrl: "views/library.html",
@@ -59,7 +64,7 @@ var app = angular.module("MyApp", ["ngRoute", "cp.ngConfirm"])
 });
 
 function set_spotify_tokens(tokens) {
-	refresh_token = tokens.refreshToken;
+	refreshToken = tokens.refreshToken;
 	spotifyHeaders = {
 		"Accept": "application/json",
 		"Authorization": "Bearer " + tokens.accessToken,
@@ -67,10 +72,10 @@ function set_spotify_tokens(tokens) {
 	};
 }
 
-function loggedIn(loggedInFactory) {
-	return loggedInFactory;
+function loggedIn(logInFactory) {
+	return logInFactory.isLoggedIn();
 }
 
 var spotifyUrl = 'https://api.spotify.com/v1';
 var spotifyHeaders = {};
-var refresh_token = '';
+var refreshToken = '';

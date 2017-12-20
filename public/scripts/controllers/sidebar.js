@@ -1,5 +1,5 @@
-app.controller("Sidebar", function($scope, $location, loggedInFactory) {
-	loggedInFactory
+app.controller("Sidebar", function($scope, $location, logInFactory) {
+	logInFactory.isLoggedIn()
 	.then(function() {
 		$("#sidebar-browse").show();
 		$("#sidebar-library").show();

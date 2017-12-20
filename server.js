@@ -22,6 +22,7 @@ var scope = 'playlist-read-private playlist-read-collaborative playlist-modify-p
 var stateKey = 'spotify_auth_state';
 var accessToken = null;
 var refreshToken = null;
+var expiresIn = null;
 
 
 var generateRandomString = function(length) {
@@ -74,6 +75,7 @@ app.get('/callback', function(req, res) {
 			if (!error && response.statusCode === 200) {
 				accessToken = body.access_token;
 				refreshToken = body.refresh_token;
+				expiresIn = body.expires_in;
 				res.redirect('/');
 			} else {
 				res.redirect('/#' + querystring.stringify({
@@ -87,7 +89,8 @@ app.get('/callback', function(req, res) {
 app.get('/tokens', function(req, res) {
 	res.send({
 		accessToken: accessToken,
-		refreshToken: refreshToken
+		refreshToken: refreshToken,
+		expiresIn: expiresIn
 	})
 });
 
@@ -97,9 +100,8 @@ app.get("/logout", function(req, res) {
 	res.sendFile(__dirname + "/public/index.html");
 });
 
-app.get('/refresh_token', function(req, res) {
+app.get('/refresh', function(req, res) {
 	// requesting access token from refresh token
-	var refreshToken = req.query.refreshToken;
 	var authOptions = {
 		url: 'https://accounts.spotify.com/api/token',
 		headers: {
@@ -107,16 +109,18 @@ app.get('/refresh_token', function(req, res) {
 		},
 		form: {
 			grant_type: 'refresh_token',
-			refreshToken: refreshToken
+			refresh_token: refreshToken
 		},
 		json: true
 	};
 
 	request.post(authOptions, function(error, response, body) {
 		if (!error && response.statusCode === 200) {
-			refreshToken = body.refresh_token;
+			accessToken = body.access_token;
+			expiresIn = body.expires_in;
 			res.send({
-				refreshToken: refreshToken
+				accessToken: accessToken,
+				expiresIn: expiresIn
 			});
 		}
 	});

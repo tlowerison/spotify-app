@@ -1,4 +1,4 @@
-app.factory("dataFactory", function($location, apiFactory, loggedInFactory) {
+app.factory("dataFactory", function($location, apiFactory, logInFactory) {
 	var service = {
 		playlists: {},
 		savedAlbums: {},
@@ -119,7 +119,7 @@ app.factory("dataFactory", function($location, apiFactory, loggedInFactory) {
 
 	function getUserPlaylists() {
 		return new Promise(function(resolve) {
-			loggedInFactory
+			logInFactory.isLoggedIn()
 			.then(function() {
 				apiFactory.call("Get a List of Current User's Playlists")
 				.then(function(res) {
@@ -135,7 +135,7 @@ app.factory("dataFactory", function($location, apiFactory, loggedInFactory) {
 
 	function getUserSavedAlbums() {
 		return new Promise(function(resolve) {
-			loggedInFactory
+			logInFactory.isLoggedIn()
 			.then(function() {
 				apiFactory.call("Get Current User's Saved Albums")
 				.then(function(res) {
@@ -159,7 +159,7 @@ app.factory("dataFactory", function($location, apiFactory, loggedInFactory) {
 
 	function getUserSavedTracks() {
 		return new Promise(function(resolve) {
-			loggedInFactory
+			logInFactory.isLoggedIn()
 			.then(function() {
 				apiFactory.call("Get Current User's Saved Tracks")
 				.then(function(res) {
@@ -174,7 +174,7 @@ app.factory("dataFactory", function($location, apiFactory, loggedInFactory) {
 
 	function getRecentlyPlayed() {
 		return new Promise(function(resolve) {
-			loggedInFactory
+			logInFactory.isLoggedIn()
 			.then(function() {
 				apiFactory.call("Get Current User's Recently Played Tracks")
 				.then(function(res) {
