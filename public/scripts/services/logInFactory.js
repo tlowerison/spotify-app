@@ -7,11 +7,9 @@ app.factory("logInFactory", function($location, $window, $http) {
 					url: "/refresh"
 				})
 				.then(function(res) {
-					if (res.data.accessToken && res.data.refreshToken) {
-						//console.log("refreshed!");
-						//console.log("accessToken", res.data.accessToken);
+					if (res.data.accessToken) {
 						set_spotify_tokens(res.data);
-						//setTimeout(this.refreshLogIn, 15);//res.data.expiresIn);
+						setTimeout(refreshLogIn, res.data.expiresIn * 1000);
 						resolve();
 					}
 				})
@@ -23,11 +21,9 @@ app.factory("logInFactory", function($location, $window, $http) {
 				.then(function(res) {
 					if (res.data.accessToken && res.data.refreshToken) {
 						set_spotify_tokens(res.data);
-						console.log('setting timer');
 						setTimeout(function() {
-							console.log('plz refresh')
-							this.refreshLogIn();
-						}, 15);//res.data.expiresIn);
+							refreshLogIn();
+						}, res.data.expiresIn * 1000);
 						resolve();
 					} else {
 						$location.path("/");
@@ -37,7 +33,8 @@ app.factory("logInFactory", function($location, $window, $http) {
 			});
 		}
 		return {
-			isLoggedIn: isLoggedIn
+			isLoggedIn: isLoggedIn,
+			refreshLogIn: refreshLogIn
 		}
 });
 

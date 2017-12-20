@@ -36,7 +36,7 @@
 				<h3>Playlists</h3>
 			</div>
 			<ul>
-				<li class="subtitle" ng-repeat="playlist in searchResults.playlists" ng-click="onSearchItemClick('playlists', this)"><a href="/user/{{playlist.owner.id}}/playlist/{{playlist.id}}" class="plain-link">{{playlist.name}}</li>
+				<li class="subtitle" ng-repeat="playlist in searchResults.playlists" ng-click="onSearchItemClick('playlists', this)"><a href="/user/{{playlist.owner.id}}/playlist/{{playlist.id}}" class="plain-link">{{playlist.name}}</a></li>
 			</ul>
 		</div>
 	</div>
@@ -45,7 +45,9 @@
 		<div id="search-item-track">
 			<h4 ng-repeat="artist in searchItem.artists">{{artist.name}}</h4>
 			<div class="section">
-				<input type="button" value="Plot Track" ng-click="onPlotTrackClick([searchItem.danceability,searchItem.energy,searchItem.loudness,searchItem.speechiness,searchItem.acousticness,searchItem.instrumentalness,searchItem.liveness,searchItem.valence,searchItem.tempo,searchItem.time_signature,searchItem.popularity])"/>
+				<button class="mdc-button mdc-button--raised" ng-click="onPlotTrackClick([searchItem.danceability,searchItem.energy,searchItem.loudness,searchItem.speechiness,searchItem.acousticness,searchItem.instrumentalness,searchItem.liveness,searchItem.valence,searchItem.tempo,searchItem.time_signature,searchItem.popularity])">
+					<h6>Plot Track</h6>
+				</button>
 			</div>
 
 			<br />

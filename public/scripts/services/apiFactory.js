@@ -432,17 +432,11 @@ app.factory("apiFactory", function($http, logInFactory) {
 			},
 		// Search
 			"Search": function(data) {
-				/*return $http({
+				return $http({
 					method: "GET",
 					url: spotifyUrl + "/search?q=" + data.q + "&type=" + data.type 
 						+ queryStringGenerator("Search", data),
 					headers: spotifyHeaders
-				});*/
-				return new Promise(function(resolve, reject) {
-					reject({
-						status: 401,
-						data: {}
-					})
 				});
 			},
 		// Tracks
@@ -576,14 +570,7 @@ app.factory("apiFactory", function($http, logInFactory) {
 
 	return {
 		call: function(endpoint, data) {
-			return endpointPromiseGenerators[endpoint](data)
-			.catch(function(err) {
-				if (err.status == 401)
-					return logInFactory.refreshLogIn()
-					.then(function() {
-						return this.call(endpoint, data);
-					});
-			})
+			return endpointPromiseGenerators[endpoint](data);
 		},
 		parseTracklistFeatures: function(tracklist) {
 			return new Promise(function(RESOLVE) {
