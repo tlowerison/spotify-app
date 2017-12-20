@@ -78,7 +78,6 @@ app.controller("Search", function($http, $scope, apiFactory, dataFactory) {
 	}
 
 	function displaySearchItem(type) {
-		console.log('sup')
 		$('#search-item-track, #search-item-album, #search-item-artist, #search-item-playlist').hide();
 		$('#search-results').fadeOut(600);
 		setTimeout(function() {

@@ -13,7 +13,7 @@ app.controller("Library", function($scope, $http, $location, apiFactory, dataFac
 	});
 
 	$scope.onObjectClick = function(type, id) {
-		if (type == "savedPlaylists") {
+		if (type == "playlists") {
 			dataFactory.currentObject = {
 				type: "playlist",
 				object: dataFactory[type][id],

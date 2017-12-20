@@ -667,6 +667,8 @@ app.factory("apiFactory", function($http, logInFactory) {
 				samples: samples
 			}
 
+			console.log(body);
+
 			return $http.post('/tracks-svm', body);
 		}
 	};

@@ -1,8 +1,8 @@
 app.controller("Object", function($scope, $http, $location, apiFactory, dataFactory) {
 	$("#page-content-wrapper").hide();
+	$scope.analysisPopUp = dataFactory.analysisPopUp;
 
 	$(document).ready(function() {
-		$scope.analysisPopUp = dataFactory.analysisPopUp;
 		if (dataFactory.currentObject.promise) {
 			dataFactory.currentObject.promise
 			.then(function() {
