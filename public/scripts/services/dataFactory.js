@@ -84,42 +84,42 @@ app.factory("dataFactory", function($location, apiFactory, logInFactory) {
 				})
 			});
 		},
-		analysisPopUp: function(type, samples) {
+		analysisPopUp: function(type, samples, scope) {
 			function removeFocus() {
 				$('.mdc-button.mdc-button--raised').focus(function() {
 					this.blur();
 				});
 			}
-			
 			if (type == "library")
 				samples = service.allFeatureSamples
-
+			
 			$.confirm({
 				title: 'Analysis',
 				content: 'Should' + (type == library ? ' your ' : ' this ') + type + ' be used to train or test the model of your musical preferences?',
+				scope: scope,
 				buttons: {
 					train: {
 						text: 'Train',
 						btnClass: 'btn-blue',
 						action: function() {
-							apiFactory.modelCall('train', samples);
-							removeFocus();
-							return true;
+							apiFactory.modelCall('train', samples)
+							removeFocus()
+							return true
 						}
 					},
 					test: {
 						text: 'Test',
 						btnClass: 'btn-blue',
 						action: function() {
-							apiFactory.modelCall('test', samples);
-							removeFocus();
-							return true;
+							apiFactory.modelCall('test', samples)
+							removeFocus()
+							return true
 						}
 					}
 				},
 				backgroundDismiss: function() {
-					removeFocus();
-					return true;
+					removeFocus()
+					return true
 				}
 			});
 		},

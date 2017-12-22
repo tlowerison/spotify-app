@@ -679,10 +679,36 @@ app.factory("apiFactory", function($http, logInFactory) {
 				samples: samples
 			}
 
-			return $http.post('/tracks-svm', body);
+			$http({
+				method: "POST",
+				url: "/tracks-svm",
+				data: body,
+				headers: {
+					"Accept": "image/png",
+					"Content-Type": "application/json"
+				}
+			}).then(function() {
+				var img = new Image();
+				$.confirm({
+					title: "Analysis",
+					content: img,
+					backgroundDismiss: true,
+					columnClass: "col-xs-12 col-md-8 col-md-offset-4"
+				});
+				setTimeout(function() {img.src = "/img.png?dummy=" + generateRandomString(10)}, 4000)
+			});
 		}
 	};
 });
+
+var generateRandomString = function(length) {
+	var text = "";
+	var possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+	for (var i = 0; i < length; i++) {
+		text += possible.charAt(Math.floor(Math.random() * possible.length));
+	}
+	return text;
+};
 
 var spotifyEndpointQueryParameters = {
 	// Albums
