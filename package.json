@@ -3,7 +3,7 @@
 	"version": "1.0.0",
 	"description": "My deployable web app.",
 	"engines": {
-		"node": "6.11.5"
+		"node": "9.2.0"
 	},
 	"main": "server.js",
 	"scripts": {
