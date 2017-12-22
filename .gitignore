@@ -1,5 +1,0 @@
-node_modules/
-pca.pkl
-clf.pkl
-optimize.py
-.env
