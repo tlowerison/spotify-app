@@ -152,6 +152,7 @@ app.get("/login", function(req, res) {
 app.post('/tracks-svm', function(req, res) {
 	console.log('tracks-svm: ' + req.body.method);
 	svm[req.body.method](req.body.samples);
+	res.end();
 });
 
 console.log('Listening on ' + port);

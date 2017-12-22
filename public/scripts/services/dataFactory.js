@@ -16,13 +16,14 @@ app.factory("dataFactory", function($location, apiFactory, logInFactory) {
 		libraryUrl: {},
 		queryType: "track,album,artist,playlist",
 		overview: function(type, playlist_id) {
-			var source = undefined, dest = undefined, preOverviewPromise = undefined;
-
+			var source = undefined, dest = undefined, append = true, preOverviewPromise = undefined;
 			switch (type) {
 				case "playlists":
 					source = service.playlists[playlist_id].tracks
 					dest = service.playlists[playlist_id]
 					preOverviewPromise = loadPlaylistTracks(playlist_id, service.playlists[playlist_id].owner.id, true)
+					// do not include spotify generated playlists in library analysis
+					append = service.playlists[playlist_id].owner.id != "spotify"
 					break;
 				case "savedAlbums":
 					source = service.savedAlbums.tracks
@@ -40,9 +41,12 @@ app.factory("dataFactory", function($location, apiFactory, logInFactory) {
 					return;
 			}
 
-			if (dest.overview != undefined) return;
+			if (service.overviewed[type == "playlists" ? playlist_id : type])
+				return new Promise(function(resolve) {resolve()});
+			else
+				service.overviewed[type == "playlists" ? playlist_id : type] = true
 
-			return getOverview(source, dest, true, preOverviewPromise, playlist_id);
+			return getOverview(source, dest, append, preOverviewPromise, playlist_id);
 		},
 		libraryPromises: [
 			getUserPlaylists(),
@@ -86,6 +90,10 @@ app.factory("dataFactory", function($location, apiFactory, logInFactory) {
 					this.blur();
 				});
 			}
+			
+			if (type == "library")
+				samples = service.allFeatureSamples
+
 			$.confirm({
 				title: 'Analysis',
 				content: 'Should' + (type == library ? ' your ' : ' this ') + type + ' be used to train or test the model of your musical preferences?',
@@ -114,7 +122,8 @@ app.factory("dataFactory", function($location, apiFactory, logInFactory) {
 					return true;
 				}
 			});
-		}
+		},
+		overviewed: {}
 	};
 
 	function getUserPlaylists() {
@@ -188,34 +197,31 @@ app.factory("dataFactory", function($location, apiFactory, logInFactory) {
 	}
 
 	function getOverview(source, dest, append, preOverviewPromise, playlist_id) {
-		if (!dest.overview) {
-			return new Promise(function(RESOLVE) {
-				if (!preOverviewPromise)
-					preOverviewPromise = new Promise(function(r) { r(); });
+		return new Promise(function(RESOLVE) {
+			if (!preOverviewPromise)
+				preOverviewPromise = new Promise(function(r) { r(); });
 
-				preOverviewPromise.then(function(res) {
-					if (res != undefined && res != null && playlist_id == undefined && append)
-						source = res;
-					else if (res != undefined && res != null && playlist_id != undefined && !append) {
-						source = res;
-						dest.tracks = res;
-					}
+			preOverviewPromise.then(function(res) {
+				if (res != undefined && res != null && playlist_id == undefined && append)
+					source = res;
+				else if (res != undefined && res != null && playlist_id != undefined && !append) {
+					source = res;
+					dest.tracks = res;
+				}
 
-					RESOLVE(new Promise(function(resolve) {
-						apiFactory.parseTracklistFeatures(source)
-						.then(function(featureLst) {
-							dest.overview = {
-								samples: featureLst[0],
-								avgFeatures: featureLst[1]
-							};
-							if (append) appendToAllFeatureSamples(featureLst[0]);
-							resolve();
-						});
-					}));
-				})
-			});
-		} else
-			return new Promise(function(resolve) {resolve()});
+				RESOLVE(new Promise(function(resolve) {
+					apiFactory.parseTracklistFeatures(source)
+					.then(function(featureLst) {
+						dest.overview = {
+							samples: featureLst[0],
+							avgFeatures: featureLst[1]
+						};
+						if (append) appendToAllFeatureSamples(featureLst[0]);
+						resolve();
+					});
+				}));
+			})
+		});
 	}
 
 	function loadPlaylistTracks(playlist_id, user_id, saved) {

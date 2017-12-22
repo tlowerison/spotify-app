@@ -570,7 +570,16 @@ app.factory("apiFactory", function($http, logInFactory) {
 
 	return {
 		call: function(endpoint, data) {
-			return endpointPromiseGenerators[endpoint](data);
+			return endpointPromiseGenerators[endpoint](data)
+			.catch(function(err) {
+				console.log(err);
+				if (err.status == 401) {
+					return logInFactory.refreshLogIn()
+				}
+			})
+			.then(function() {
+				return endpointPromiseGenerators[endpoint](data);
+			})
 		},
 		parseTracklistFeatures: function(tracklist) {
 			return new Promise(function(RESOLVE) {
@@ -621,10 +630,12 @@ app.factory("apiFactory", function($http, logInFactory) {
 							i -= 1;
 							continue;
 						}
-						features[i].popularity = tracklist[i].popularity;
+						//features[i].popularity = tracklist[i].popularity;
+						//if (tracklist[i].popularity == null || tracklist[i].popularity == NaN)
+							//console.log(i, tracklist[i]);
 					}
 
-					// SVM
+					// clean up samples
 						clean(features, undefined);
 						for (var i in features) {
 							var track = features[i];
@@ -633,6 +644,7 @@ app.factory("apiFactory", function($http, logInFactory) {
 								delete track[key];
 							}
 						}
+
 						var trackFeatures = features.map(function(obj) {
 							return Object.keys(obj).map(function(key) {
 								return obj[key];
@@ -666,8 +678,6 @@ app.factory("apiFactory", function($http, logInFactory) {
 				method: method,
 				samples: samples
 			}
-
-			console.log(body);
 
 			return $http.post('/tracks-svm', body);
 		}
@@ -842,12 +852,12 @@ var removedFeatures = [
 var dBNorm = -60;
 var bpmNorm = 180;
 var timeSignatureNorm = 4;
-var popularityNorm = 100;
+//var popularityNorm = 100;
 var scaleTrack = function(x) {
 	x[2] /= dBNorm;
 	x[8] /= bpmNorm;
 	x[9] /= timeSignatureNorm;
-	x[10] /= popularityNorm;
+	//x[10] /= popularityNorm;
 };
 var clean = function(arr, deleteValue) {
 	for (var i = 0; i < arr.length; i++) {

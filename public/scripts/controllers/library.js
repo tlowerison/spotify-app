@@ -50,7 +50,6 @@ app.controller("Library", function($scope, $http, $location, apiFactory, dataFac
 			$('.spinner').fadeIn();
 			dataFactory.loadFullLibrary()
 			.then(function() {
-				$scope.allFeatureSamples = dataFactory.allFeatureSamples;
 				modelStatus("loaded");
 			})
 		} else {
@@ -59,10 +58,7 @@ app.controller("Library", function($scope, $http, $location, apiFactory, dataFac
 	}
 
 	$scope.onUserModelTrainButtonClick = function() {
-		$http.post('/tracks-svm', { method: "train", samples: dataFactory.allFeatureSamples})
-		.then(function(res) {
-			$('body').append(res.plt);
-		});
+		$http.post('/tracks-svm', { method: "train", samples: dataFactory.allFeatureSamples});
 		modelStatus("trained");
 	}
 

@@ -13,7 +13,6 @@ app.controller("Object", function($scope, $http, $location, apiFactory, dataFact
 					$scope.savedAlbums = dataFactory.savedAlbums;
 					$scope.savedTracks = dataFactory.savedTracks;
 					$scope.recentTracks = dataFactory.recentTracks;
-					$scope.allFeatureSamples = dataFactory.allFeatureSamples;
 					$("#page-content-wrapper").fadeIn("slow");
 				});
 			});

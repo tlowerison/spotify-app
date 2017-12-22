@@ -9,7 +9,6 @@ app.factory("logInFactory", function($location, $window, $http) {
 				.then(function(res) {
 					if (res.data.accessToken) {
 						set_spotify_tokens(res.data);
-						setTimeout(refreshLogIn, res.data.expiresIn * 1000);
 						resolve();
 					}
 				})
@@ -21,9 +20,6 @@ app.factory("logInFactory", function($location, $window, $http) {
 				.then(function(res) {
 					if (res.data.accessToken && res.data.refreshToken) {
 						set_spotify_tokens(res.data);
-						setTimeout(function() {
-							refreshLogIn();
-						}, res.data.expiresIn * 1000);
 						resolve();
 					} else {
 						$location.path("/");

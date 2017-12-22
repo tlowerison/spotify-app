@@ -3,20 +3,10 @@ py = spawn('python', ['svm.py']),
 result = null;
 var DATA = "";
 
-py.stdout.on('data', function(data) {
-	console.log('data');
-	DATA = data.toString();
-});
-
-py.stdout.on('end', function() {
-	console.log('Python script output:');
-	console.log(DATA);
-});
-
 function promiseGenerator(method, writeDatas) {
 	writeDatas = writeDatas.map(function(d) {
 		return JSON.stringify(d);
-	})
+	});
 	writeDatas.unshift(method);
 	py.stdin.write(writeDatas.join('\n'));
 	py.stdin.end();
