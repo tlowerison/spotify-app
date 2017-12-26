@@ -15,10 +15,10 @@ app.use(bodyParser.urlencoded({ extended: true }));
 
 dotenv.load();
 
-var port = "5000";
+var port = process.env.PORT;
 var client_id = process.env.CLIENT_ID;
 var client_secret = process.env.CLIENT_SECRET;
-var redirect_uri = "http://localhost:"+ port + "/callback";
+var redirect_uri = process.env.REDIRECT_URI;
 var scope = "playlist-read-private playlist-read-collaborative playlist-modify-public playlist-modify-private user-library-read user-library-modify user-read-private user-read-email user-read-birthdate user-follow-read user-follow-modify user-top-read user-read-playback-state user-read-recently-played user-read-currently-playing user-modify-playback-state";
 var stateKey = "spotify_auth_state";
 var accessToken = null;
@@ -150,8 +150,7 @@ app.get("/img.png", function(req, res) {
 	res.sendFile(tmpPNG.name);
 })
 
-console.log("Listening on port " + port);
-app.listen(parseInt(port));
+app.listen(process.env.PORT);
 
 process.on("exit", function() {
 	tmpPCA.removeCallback();
