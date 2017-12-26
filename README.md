@@ -3,13 +3,9 @@ Developed by Trey Lowerison<br />
 <br />
 Stack: MongoDB Express AngularJS Node.js Python Scikit-Learn<br />
 <br />
-Only supported for local use right now.<br />
-Download or clone down, then open a terminal in the folder.<br />
-Run:<br />
-npm install<br />
-npm start<br />
+Website is up!<br />
+<a href="https://spotifynoiseinjection.herokuapp.com">Noisify</a><br />
 <br />
-Next, open in your browser http://localhost:5000<br />
 The app provides basic feature analysis on your Saved Tracks, Saved Albums, Playlists and Recent Tracks.<br />
 If you click "User Model", a Python script will run and build a model of your music preferences.<br />
 
