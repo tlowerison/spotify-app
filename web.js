@@ -1,11 +1,11 @@
 var tmp = require("tmp");
-var svm = require("./svm.js");
 var dotenv = require("dotenv");
 var express = require("express");
 var request = require("request");
 var bodyParser = require("body-parser");
 var querystring = require("querystring");
 var cookieParser = require("cookie-parser");
+var open = require("amqplib").connect("amqp://localhost");
 
 var app = express();
 app.use(express.static(__dirname + "/public")).use(cookieParser());
@@ -135,22 +135,43 @@ app.get("/((:page(browse|library|search))|(library/:type(playlists|savedalbums|s
 	res.sendFile(__dirname + '/public/index.html');
 });
 
-
-app.post("/tracks-svm", function(req, res) {
-	if (req.body.method == "train" && (tmpPCA == null || tmpCLF == null)) {
-		tmpPCA = tmp.fileSync({postfix: ".pkl"});
-		tmpCLF = tmp.fileSync({postfix: ".pkl"});
-		tmpPNG = tmp.fileSync({postfix: ".png"});
-	}
-	svm(req.body.method, tmpPCA.name, tmpCLF.name, tmpPNG.name, req.body.samples);
-	res.sendFile(tmpPNG.name);
-});
-
 app.get("/img.png", function(req, res) {
 	res.sendFile(tmpPNG.name);
 })
 
 app.listen(process.env.PORT);
+
+// Publisher
+var q = "tasks";
+open.then(function(conn) {
+	var ok = conn.createChannel();
+	ok = ok.then(function(ch) {
+		ch.assertQueue(q);
+
+		app.post("/tracks-svm", function(req, res) {
+			if (req.body.method == "train" && (tmpPCA == null || tmpCLF == null)) {
+				tmpPCA = tmp.fileSync({postfix: ".pkl"});
+				tmpCLF = tmp.fileSync({postfix: ".pkl"});
+				tmpPNG = tmp.fileSync({postfix: ".png"});
+			}
+			var workerReq = [
+				req.body.method,
+				tmpPCA.name,
+				tmpCLF.name,
+				tmpPNG.name,
+				JSON.stringify(req.body.samples)
+			].join("\n");
+
+			ch.sendToQueue(q, new Buffer(workerReq));
+
+			res.end();
+		});
+
+		ch.sendToQueue(q, new Buffer("something to do"));
+	});
+	return ok;
+}).then(null, console.warn);
+
 
 process.on("exit", function() {
 	tmpPCA.removeCallback();
