@@ -5,9 +5,9 @@
 	"engines": {
 		"node": "9.2.0"
 	},
-	"main": "server.js",
+	"main": "web.js",
 	"scripts": {
-		"start": "node server.js"
+		"start": "node web.js"
 	},
 	"dependencies": {
 		"amqplib": "^0.5.2",

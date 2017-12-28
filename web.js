@@ -5,7 +5,7 @@ var request = require("request");
 var bodyParser = require("body-parser");
 var querystring = require("querystring");
 var cookieParser = require("cookie-parser");
-var open = require("amqplib").connect("amqp://localhost");
+//var open = require("amqplib").connect("amqp://localhost");
 
 var app = express();
 app.use(express.static(__dirname + "/public")).use(cookieParser());
@@ -15,18 +15,11 @@ app.use(bodyParser.urlencoded({ extended: true }));
 
 dotenv.load();
 
-var port = process.env.PORT;
 var client_id = process.env.CLIENT_ID;
 var client_secret = process.env.CLIENT_SECRET;
 var redirect_uri = process.env.REDIRECT_URI;
 var scope = "playlist-read-private playlist-read-collaborative playlist-modify-public playlist-modify-private user-library-read user-library-modify user-read-private user-read-email user-read-birthdate user-follow-read user-follow-modify user-top-read user-read-playback-state user-read-recently-played user-read-currently-playing user-modify-playback-state";
 var stateKey = "spotify_auth_state";
-var accessToken = null;
-var refreshToken = null;
-var expiresIn = null;
-var tmpPCA = null;
-var tmpCLF = null;
-var tmpPNG = null;
 
 var generateRandomString = function(length) {
 	var text = "";
@@ -76,10 +69,7 @@ app.get("/callback", function(req, res) {
 
 		request.post(authOptions, function(error, response, body) {
 			if (!error && response.statusCode === 200) {
-				accessToken = body.access_token;
-				refreshToken = body.refresh_token;
-				expiresIn = body.expires_in;
-				res.redirect("/");
+				res.redirect("/tokens/" + body.access_token + "/" + body.refresh_token);
 			} else {
 				res.redirect("/#" + querystring.stringify({
 					error: "invalid_token"
@@ -89,21 +79,7 @@ app.get("/callback", function(req, res) {
 	}
 });
 
-app.get("/tokens", function(req, res) {
-	res.send({
-		accessToken: accessToken,
-		refreshToken: refreshToken,
-		expiresIn: expiresIn
-	})
-});
-
-app.get("/logout", function(req, res) {
-	accessToken = null;
-	refreshToken = null;
-	res.sendFile(__dirname + "/public/index.html");
-});
-
-app.get("/refresh", function(req, res) {
+app.post("/refresh", function(req, res) {
 	// requesting access token from refresh token
 	var authOptions = {
 		url: "https://accounts.spotify.com/api/token",
@@ -112,18 +88,17 @@ app.get("/refresh", function(req, res) {
 		},
 		form: {
 			grant_type: "refresh_token",
-			refresh_token: refreshToken
+			refresh_token: req.body.refresh_token
 		},
 		json: true
 	};
 
 	request.post(authOptions, function(error, response, body) {
 		if (!error && response.statusCode === 200) {
-			accessToken = body.access_token;
 			expiresIn = body.expires_in;
 			res.send({
-				accessToken: accessToken,
-				expiresIn: expiresIn
+				access_token: body.access_token,
+				refresh_token: body.refresh_token
 			});
 		}
 	});
@@ -131,12 +106,12 @@ app.get("/refresh", function(req, res) {
 
 // All accessible pages use the basic html index file
 // Individual pages are designed and provided using AngularJS routing
-app.get("/((:page(browse|library|search))|(library/:type(playlists|savedalbums|savedtracks|recentlyplayed))|(:type(playlist|album|artist|track)/:id)|(user/:user/playlist/:id)|(login))", function(req, res) {
+app.get("/((:page(browse|library|search))|(library/:type(playlists|savedalbums|savedtracks|recentlyplayed))|(:type(playlist|album|artist|track)/:id)|(user/:user/playlist/:id)|(login)|(tokens/:access_token/:refresh_token))", function(req, res) {
 	res.sendFile(__dirname + '/public/index.html');
 });
 
 app.get("/img.png", function(req, res) {
-	res.sendFile(tmpPNG.name);
+	res.sendFile(req.body.tmpPNG.name);
 })
 
 app.listen(process.env.PORT);
@@ -166,8 +141,6 @@ open.then(function(conn) {
 
 			res.end();
 		});
-
-		ch.sendToQueue(q, new Buffer("something to do"));
 	});
 	return ok;
 }).then(null, console.warn);

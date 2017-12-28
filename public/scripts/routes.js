@@ -7,13 +7,16 @@ var app = angular.module("MyApp", ["ngRoute", "cp.ngConfirm"])
 	.when("/", {
 		templateUrl: "views/home.html"
 	})
+	.when("/tokens/:access_token/:refresh_token", {
+		templateUrl: "views/home.html",
+		redirectTo: function(params) {
+			setSpotifyTokens(params);
+			return "/";
+		}
+	})
 	.when("/_=_", {
 		templateUrl: "views/home.html",
-		resolve: {
-			redirect: function($location) {
-				$location.path("/");
-			}
-		}
+		redirectTo: "/"
 	})
 	.when("/library", {
 		templateUrl: "views/library.html",
@@ -42,6 +45,13 @@ var app = angular.module("MyApp", ["ngRoute", "cp.ngConfirm"])
 	.when("/login", {
 		templateUrl: "views/login.html"
 	})
+	.when("/logout", {
+		templateUrl: "",
+		redirectTo: function(params) {
+			removeSpotifyTokens(params);
+			return "/";
+		}
+	})
 	.when("/:type/:id", {
 		templateUrl: function(params) {
 			return "views/objects/" + params.type + ".html";
@@ -63,13 +73,18 @@ var app = angular.module("MyApp", ["ngRoute", "cp.ngConfirm"])
 	});
 });
 
-function set_spotify_tokens(tokens) {
-	refreshToken = tokens.refreshToken;
+function setSpotifyTokens(tokens) {
 	spotifyHeaders = {
 		"Accept": "application/json",
-		"Authorization": "Bearer " + tokens.accessToken,
+		"Authorization": "Bearer " + tokens.access_token,
 		"Content-Type": "application/json"
 	};
+	refresh_token = tokens.refresh_token;
+}
+
+function removeSpotifyTokens() {
+	spotifyHeaders = null;
+	refresh_token = null;
 }
 
 function loggedIn(logInFactory) {
@@ -77,5 +92,5 @@ function loggedIn(logInFactory) {
 }
 
 var spotifyUrl = 'https://api.spotify.com/v1';
-var spotifyHeaders = {};
-var refreshToken = '';
+var spotifyHeaders = null;
+var refresh_token = null;

@@ -3,12 +3,15 @@ app.factory("logInFactory", function($location, $window, $http) {
 		function refreshLogIn() {
 			return new Promise(function(resolve, reject) {
 				$http({
-					method: "GET",
-					url: "/refresh"
+					method: "POST",
+					url: "/refresh",
+					data: {
+						refresh_token: refresh_token
+					}
 				})
 				.then(function(res) {
-					if (res.data.accessToken) {
-						set_spotify_tokens(res.data);
+					if (res.data.access_token) {
+						setSpotifyTokens(res.data);
 						resolve();
 					}
 				})
@@ -16,16 +19,12 @@ app.factory("logInFactory", function($location, $window, $http) {
 		}
 		function isLoggedIn() {
 			return new Promise(function(resolve, reject) {
-				$http.get("/tokens")
-				.then(function(res) {
-					if (res.data.accessToken && res.data.refreshToken) {
-						set_spotify_tokens(res.data);
-						resolve();
-					} else {
-						$location.path("/");
-						reject();
-					}
-				});
+				if (spotifyHeaders != null) {
+					resolve();
+				} else {
+					$location.path("/");
+					reject();
+				}
 			});
 		}
 		return {
