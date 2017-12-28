@@ -64,12 +64,19 @@ class Model:
 
 #start process
 if __name__ == "__main__":
+	print("python")
 	lines = sys.stdin.readlines()
+	print("lines")
 	method = lines[0][:len(lines[0]) - 1]
 	pcaPath = lines[1][:len(lines[1]) - 1]
 	clfPath = lines[2][:len(lines[2]) - 1]
 	pngPath = lines[3][:len(lines[3]) - 1]
 	data = eval(lines[4])
+	print(method)
+	print(pcaPath)
+	print(clfPath)
+	print(pngPath)
+	print(data)
 	model = Model()
 	if method == "train":
 		model.train(data)
