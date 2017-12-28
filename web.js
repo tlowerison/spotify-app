@@ -128,7 +128,8 @@ app.get("/((:page(browse|library|search))|(library/:type(playlists|savedalbums|s
 });
 
 app.get("/img.png", function(req, res) {
-	res.sendFile(req.body.tmpPNG.name);
+	var tmpsId = req.query.tmpsId;
+	res.sendFile(tmps[tmpsId].PNG.name);
 })
 
 app.listen(process.env.PORT);
@@ -146,8 +147,6 @@ open.then(function(conn) {
 
 
 app.post("/tracks-svm", function(req, res) {
-	if (req.body.method == "train" && (tmpPCA == null || tmpCLF == null)) {
-	}
 	var workerReq = [
 		req.body.method,
 		tmps[req.body.tmpsId].PCA.name,
