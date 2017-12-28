@@ -5,6 +5,7 @@ var request = require("request");
 var bodyParser = require("body-parser");
 var querystring = require("querystring");
 var cookieParser = require("cookie-parser");
+var fs = require("fs"); //Load the filesystem module
 
 var app = express();
 app.use(express.static(__dirname + "/public")).use(cookieParser());
@@ -130,6 +131,9 @@ app.get("/((:page(browse|library|search))|(library/:type(playlists|savedalbums|s
 
 app.get("/img.png", function(req, res) {
 	var tmpsId = req.query.tmpsId;
+	var stats = fs.statSync(tmps[tmpsId].PNG.name)
+	var fileSizeInBytes = stats["size"]
+	console.log("Retrieving image at " + tmps[tmpsId].PNG.name + " with file size " + fileSizeInBytes.toString());
 	res.sendFile(tmps[tmpsId].PNG.name);
 })
 
