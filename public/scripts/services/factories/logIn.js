@@ -19,6 +19,7 @@ app.factory("logInFactory", function($location, $window, $http) {
 		}
 		function isLoggedIn() {
 			return new Promise(function(resolve, reject) {
+				console.log(spotifyHeaders)
 				if (spotifyHeaders != null) {
 					resolve();
 				} else {
