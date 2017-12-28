@@ -1,8 +1,4 @@
 app.controller("Sidebar", function($scope, $location, logInFactory) {
-	logInFactory.isLoggedIn()
-	.then(loggedInSidebar)
-	.catch($scope.loggedOutSidebar)
-
 	function loggedInSidebar() {
 		$("#sidebar-browse").show()
 		$("#sidebar-library").show()
@@ -18,4 +14,8 @@ app.controller("Sidebar", function($scope, $location, logInFactory) {
 		$("#sidebar-login").show()
 		$("#sidebar-logout").hide()
 	}
+
+	logInFactory.isLoggedIn()
+	.then(loggedInSidebar)
+	.catch($scope.loggedOutSidebar)
 })
