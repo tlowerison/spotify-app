@@ -137,9 +137,12 @@ app.listen(process.env.PORT);
 // Publisher
 var q = "tasks";
 var channel = null;
+console.log(open);
 open.then(function(conn) {
+	console.log(conn);
 	var ok = conn.createChannel();
 	ok = ok.then(function(ch) {
+		console.log(ch);
 		channel = ch;
 	});
 	return ok;
