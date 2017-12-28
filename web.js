@@ -5,7 +5,7 @@ var request = require("request");
 var bodyParser = require("body-parser");
 var querystring = require("querystring");
 var cookieParser = require("cookie-parser");
-//var open = require("amqplib").connect("amqp://localhost");
+var open = require("amqplib").connect("amqp://localhost");
 
 var app = express();
 app.use(express.static(__dirname + "/public")).use(cookieParser());
