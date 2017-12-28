@@ -66,7 +66,7 @@ class Model:
 if __name__ == "__main__":
 	print("python")
 	lines = sys.stdin.readlines()
-	print("lines")
+	"""print("lines")
 	method = lines[0][:len(lines[0]) - 1]
 	pcaPath = lines[1][:len(lines[1]) - 1]
 	clfPath = lines[2][:len(lines[2]) - 1]
@@ -85,4 +85,4 @@ if __name__ == "__main__":
 	elif method == "unit_test":
 		unit_test(model)
 	model.plot(method, levels=64)
-	model.save()
+	model.save()"""
