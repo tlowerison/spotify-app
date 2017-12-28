@@ -171,3 +171,6 @@ process.on("exit", function() {
 		removeTmps(tmpsId);
 	}
 });
+if (fs.existsSync("worker.py")) {
+	console.log("worker.py exists")
+}

@@ -17,9 +17,6 @@ open.then(function(conn) {
 				console.log("CONSUMER");
 				console.log("Consuming from queue");
 				console.log(msg.content.toString("utf8"));
-				if (fs.existsSync("worker.py")) {
-					console.log("worker.py exists")
-				}
 				py = spawn("python", ["worker.py"])
 				py.stdout.on("data", function(data) {
 					console.log(data.toString());
