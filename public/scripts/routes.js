@@ -50,6 +50,11 @@ var app = angular.module("MyApp", ["ngRoute", "cp.ngConfirm"])
 		redirectTo: function(params) {
 			removeSpotifyTokens(params);
 			return "/";
+		},
+		resolve: {
+			removeTmps: function($http) {
+				$http.get("/logout/")
+			}
 		}
 	})
 	.when("/:type/:id", {
@@ -80,11 +85,13 @@ function setSpotifyTokens(tokens) {
 		"Content-Type": "application/json"
 	};
 	refresh_token = tokens.refresh_token;
+	tmpsId = tokens.refresh_token;
 }
 
 function removeSpotifyTokens() {
 	spotifyHeaders = null;
 	refresh_token = null;
+	tmpsId = null;
 }
 
 function loggedIn(logInFactory) {
@@ -94,3 +101,4 @@ function loggedIn(logInFactory) {
 var spotifyUrl = 'https://api.spotify.com/v1';
 var spotifyHeaders = null;
 var refresh_token = null;
+var tmpsId = null;

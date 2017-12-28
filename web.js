@@ -20,6 +20,7 @@ var client_secret = process.env.CLIENT_SECRET;
 var redirect_uri = process.env.REDIRECT_URI;
 var scope = "playlist-read-private playlist-read-collaborative playlist-modify-public playlist-modify-private user-library-read user-library-modify user-read-private user-read-email user-read-birthdate user-follow-read user-follow-modify user-top-read user-read-playback-state user-read-recently-played user-read-currently-playing user-modify-playback-state";
 var stateKey = "spotify_auth_state";
+var tmps = {};
 
 var generateRandomString = function(length) {
 	var text = "";
@@ -69,6 +70,11 @@ app.get("/callback", function(req, res) {
 
 		request.post(authOptions, function(error, response, body) {
 			if (!error && response.statusCode === 200) {
+				tmps[body.refresh_token] = {
+					PCA: tmp.fileSync({postfix: ".pkl"}),
+					CLF: tmp.fileSync({postfix: ".pkl"}),
+					PNG: tmp.fileSync({postfix: ".png"})
+				}
 				res.redirect("/tokens/" + body.access_token + "/" + body.refresh_token);
 			} else {
 				res.redirect("/#" + querystring.stringify({
@@ -95,13 +101,24 @@ app.post("/refresh", function(req, res) {
 
 	request.post(authOptions, function(error, response, body) {
 		if (!error && response.statusCode === 200) {
-			expiresIn = body.expires_in;
 			res.send({
 				access_token: body.access_token,
-				refresh_token: body.refresh_token
+				refresh_token: body.refresh_token || req.body.refresh_token
 			});
 		}
 	});
+});
+
+function removeTmps(tmpsId) {
+	tmps[tmpsId].PCA.removeCallback();
+	tmps[tmpsId].CLF.removeCallback();
+	tmps[tmpsId].PNG.removeCallback();
+	delete tmps[tmpsId];
+}
+
+app.delete("/tmps", function(req, res) {
+	var tmpsId = req.query.tmpsId;
+	removeTmps(tmpsId);
 });
 
 // All accessible pages use the basic html index file
@@ -130,15 +147,12 @@ open.then(function(conn) {
 
 app.post("/tracks-svm", function(req, res) {
 	if (req.body.method == "train" && (tmpPCA == null || tmpCLF == null)) {
-		tmpPCA = tmp.fileSync({postfix: ".pkl"});
-		tmpCLF = tmp.fileSync({postfix: ".pkl"});
-		tmpPNG = tmp.fileSync({postfix: ".png"});
 	}
 	var workerReq = [
 		req.body.method,
-		tmpPCA.name,
-		tmpCLF.name,
-		tmpPNG.name,
+		tmps[req.body.tmpsId].PCA.name,
+		tmps[req.body.tmpsId].CLF.name,
+		tmps[req.body.tmpsId].PNG.name,
 		JSON.stringify(req.body.samples)
 	].join("\n");
 
@@ -149,7 +163,7 @@ app.post("/tracks-svm", function(req, res) {
 });
 
 process.on("exit", function() {
-	tmpPCA.removeCallback();
-	tmpCLF.removeCallback();
-	tmpPNG.removeCallback();
+	for (var tmpsId in tmps) {
+		removeTmps(tmpsId);
+	}
 });

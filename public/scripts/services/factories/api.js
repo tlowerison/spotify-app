@@ -676,7 +676,8 @@ app.factory("apiFactory", function($http, logInFactory) {
 		modelCall: function(method, samples) {
 			var body = {
 				method: method,
-				samples: samples
+				samples: samples,
+				tmpsId: tmpsId
 			}
 
 			$http({
