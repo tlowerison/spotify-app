@@ -132,37 +132,30 @@ app.get("/img.png", function(req, res) {
 	res.sendFile(tmps[tmpsId].PNG.name);
 })
 
-app.listen(process.env.PORT);
-
 // Publisher
 var q = "tasks";
-var channel = null;
-console.log(open);
 open.then(function(conn) {
-	console.log(conn);
 	var ok = conn.createChannel();
 	ok = ok.then(function(ch) {
-		console.log(ch);
-		channel = ch;
+		app.post("/tracks-svm", function(req, res) {
+			var workerReq = [
+				req.body.method,
+				tmps[req.body.tmpsId].PCA.name,
+				tmps[req.body.tmpsId].CLF.name,
+				tmps[req.body.tmpsId].PNG.name,
+				JSON.stringify(req.body.samples)
+			].join("\n");
+
+			ch.assertQueue(q);
+			ch.sendToQueue(q, new Buffer(workerReq));
+
+			res.end();
+		});
+		app.listen(process.env.PORT);
 	});
 	return ok;
 }).then(null, console.warn);
 
-
-app.post("/tracks-svm", function(req, res) {
-	var workerReq = [
-		req.body.method,
-		tmps[req.body.tmpsId].PCA.name,
-		tmps[req.body.tmpsId].CLF.name,
-		tmps[req.body.tmpsId].PNG.name,
-		JSON.stringify(req.body.samples)
-	].join("\n");
-
-	channel.assertQueue(q);
-	channel.sendToQueue(q, new Buffer(workerReq));
-
-	res.end();
-});
 
 process.on("exit", function() {
 	for (var tmpsId in tmps) {
