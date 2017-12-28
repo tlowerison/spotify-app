@@ -118,33 +118,35 @@ app.listen(process.env.PORT);
 
 // Publisher
 var q = "tasks";
+var channel = null;
 open.then(function(conn) {
 	var ok = conn.createChannel();
 	ok = ok.then(function(ch) {
-		ch.assertQueue(q);
-
-		app.post("/tracks-svm", function(req, res) {
-			if (req.body.method == "train" && (tmpPCA == null || tmpCLF == null)) {
-				tmpPCA = tmp.fileSync({postfix: ".pkl"});
-				tmpCLF = tmp.fileSync({postfix: ".pkl"});
-				tmpPNG = tmp.fileSync({postfix: ".png"});
-			}
-			var workerReq = [
-				req.body.method,
-				tmpPCA.name,
-				tmpCLF.name,
-				tmpPNG.name,
-				JSON.stringify(req.body.samples)
-			].join("\n");
-
-			ch.sendToQueue(q, new Buffer(workerReq));
-
-			res.end();
-		});
+		channel = ch;
 	});
 	return ok;
 }).then(null, console.warn);
 
+
+app.post("/tracks-svm", function(req, res) {
+	if (req.body.method == "train" && (tmpPCA == null || tmpCLF == null)) {
+		tmpPCA = tmp.fileSync({postfix: ".pkl"});
+		tmpCLF = tmp.fileSync({postfix: ".pkl"});
+		tmpPNG = tmp.fileSync({postfix: ".png"});
+	}
+	var workerReq = [
+		req.body.method,
+		tmpPCA.name,
+		tmpCLF.name,
+		tmpPNG.name,
+		JSON.stringify(req.body.samples)
+	].join("\n");
+
+	channel.assertQueue(q);
+	channel.sendToQueue(q, new Buffer(workerReq));
+
+	res.end();
+});
 
 process.on("exit", function() {
 	tmpPCA.removeCallback();
