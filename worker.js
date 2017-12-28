@@ -9,12 +9,11 @@ open.then(function(conn) {
 	var ok = conn.createChannel();
 	ok = ok.then(function(ch) {
 		ch.assertQueue(q);
-		console.log("CH.CONSUME");
 
 		ch.consume(q, function(msg) {
 			if (msg !== null) {
 				py = spawn("python", ["worker.py"])
-				py.stdin.write(msg)
+				py.stdin.write(msg.content.toString("utf8"))
 				py.stdin.end();
 				ch.ack(msg);
 			}
