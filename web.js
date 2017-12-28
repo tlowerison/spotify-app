@@ -153,9 +153,7 @@ app.post("/tracks-svm", function(req, res) {
 		var ok = conn.createChannel();
 		ok = ok.then(function(channel) {
 			channel.assertQueue(q);
-			console.log("PUBLISHER")
-			console.log("Sending to Queue");
-			console.log(workerReq);
+			console.log("PUBLISHING")
 			channel.sendToQueue(q, new Buffer(workerReq));
 		});
 		return ok;

@@ -13,11 +13,8 @@ open.then(function(conn) {
 		console.log("CHANNEL EXISTS");
 
 		ch.consume(q, function(msg) {
-			console.log("consuming");
 			if (msg !== null) {
-				console.log("CONSUMER");
-				console.log("Consuming from queue");
-				console.log(msg.content.toString("utf8"));
+				console.log("CONSUMING");
 				py = spawn("python", ["worker.py"])
 				py.stdout.on("data", function(data) {
 					console.log(data.toString());
