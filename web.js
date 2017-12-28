@@ -150,6 +150,9 @@ app.post("/tracks-svm", function(req, res) {
 		var ok = conn.createChannel();
 		ok = ok.then(function(channel) {
 			channel.assertQueue(q);
+			console.log("PUBLISHER")
+			console.log("Sending to Queue");
+			console.log(workerReq);
 			channel.sendToQueue(q, new Buffer(workerReq));
 		});
 		return ok;
@@ -165,7 +168,3 @@ process.on("exit", function() {
 		removeTmps(tmpsId);
 	}
 });
-
-for (var i = 0; i < 15; i ++ ) {
-	console.log("HELLLLOOOOOOO")
-}

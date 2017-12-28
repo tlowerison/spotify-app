@@ -12,6 +12,9 @@ open.then(function(conn) {
 
 		ch.consume(q, function(msg) {
 			if (msg !== null) {
+				console.log("CONSUMER");
+				console.log("Consuming from queue");
+				console.log(msg.content.toString("utf8"));
 				py = spawn("python", ["worker.py"])
 				py.stdin.write(msg.content.toString("utf8"))
 				py.stdin.end();
