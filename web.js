@@ -5,7 +5,6 @@ var request = require("request");
 var bodyParser = require("body-parser");
 var querystring = require("querystring");
 var cookieParser = require("cookie-parser");
-var open = require("amqplib").connect("amqp://localhost");
 
 var app = express();
 app.use(express.static(__dirname + "/public")).use(cookieParser());
@@ -21,6 +20,8 @@ var redirect_uri = process.env.REDIRECT_URI;
 var scope = "playlist-read-private playlist-read-collaborative playlist-modify-public playlist-modify-private user-library-read user-library-modify user-read-private user-read-email user-read-birthdate user-follow-read user-follow-modify user-top-read user-read-playback-state user-read-recently-played user-read-currently-playing user-modify-playback-state";
 var stateKey = "spotify_auth_state";
 var tmps = {};
+var url = process.env.CLOUDAMQP_URL || "amqp://localhost";
+var open = require("amqplib").connect(url);
 
 var generateRandomString = function(length) {
 	var text = "";
