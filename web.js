@@ -5,7 +5,7 @@ var request = require("request");
 var bodyParser = require("body-parser");
 var querystring = require("querystring");
 var cookieParser = require("cookie-parser");
-var fs = require("fs"); //Load the filesystem module
+var fs = require("fs");
 
 var app = express();
 app.use(express.static(__dirname + "/public")).use(cookieParser());
@@ -23,6 +23,7 @@ var stateKey = "spotify_auth_state";
 var tmps = {};
 var url = process.env.CLOUDAMQP_URL || "amqp://localhost";
 var open = require("amqplib").connect(url);
+var worker = require("./worker.js");
 
 var generateRandomString = function(length) {
 	var text = "";
@@ -139,8 +140,6 @@ app.get("/img.png", function(req, res) {
 
 // Publisher
 var q = "tasks";
-
-
 app.post("/tracks-svm", function(req, res) {
 	var workerReq = [
 		req.body.method,

@@ -1,4 +1,4 @@
-import sys, json
+import sys
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.font_manager as fm
@@ -22,6 +22,7 @@ class Model:
 		self.clf = svm.OneClassSVM(nu=nu, kernel="rbf", gamma=gamma)
 		self.clf.fit(self.X_train)
 		self.y_pred_train = self.clf.predict(self.X_train)
+		print("trained")
 
 	def test(self, data):
 		self.pca = joblib.load(pcaPath)
@@ -29,9 +30,10 @@ class Model:
 
 		self.X_test = self.pca.transform(np.array(data))
 		self.y_pred_test = self.clf.predict(self.X_test)
+		print("tested")
 
-	def plot(self, method, title="", levels=10):
-		X = self.X_train if method == "Training" else self.X_test
+	def plot(self, method, levels=10):
+		X = self.X_train if method == "train" else self.X_test
 		Z = self.clf.decision_function(np.c_[xx.ravel(), yy.ravel()]).reshape(xx.shape)
 
 		plt.contourf(xx, yy, Z, levels=np.linspace(Z.min(), 0, levels), cmap=plt.get_cmap("inferno"))
@@ -49,6 +51,7 @@ class Model:
 			loc="lower left", prop=fm.FontProperties(size=9))
 		for text in leg.get_texts():
 			text.set_color("white")
+			print("plotted")
 
 	def show(self):
 		plt.show()
@@ -57,6 +60,7 @@ class Model:
 		joblib.dump(self.pca, pcaPath)
 		joblib.dump(self.clf, clfPath)
 		plt.savefig(pngPath, bbox_inches="tight")
+		print("saved")
 
 #start process
 if __name__ == "__main__":
@@ -65,14 +69,13 @@ if __name__ == "__main__":
 	pcaPath = lines[1][:len(lines[1]) - 1]
 	clfPath = lines[2][:len(lines[2]) - 1]
 	pngPath = lines[3][:len(lines[3]) - 1]
-	data = json.loads(lines[4])
+	data = eval(lines[4])
 	model = Model()
 	if method == "train":
 		model.train(data)
-		model.plot("Training", levels=64)
-	elif method == 'test':
+	elif method == "test":
 		model.test(data)
-		model.plot("Testing", levels=64)
 	elif method == "unit_test":
 		unit_test(model)
+	model.plot(method, levels=64)
 	model.save()
