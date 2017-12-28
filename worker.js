@@ -3,6 +3,7 @@ var q = "tasks";
 var url = process.env.CLOUDAMQP_URL || "amqp://localhost";
 var open = require("amqplib").connect(url);
 var spawn = require("child_process").spawn
+var fs = require("fs");
 
 // Consumer
 open.then(function(conn) {
@@ -17,6 +18,9 @@ open.then(function(conn) {
 				console.log("CONSUMER");
 				console.log("Consuming from queue");
 				console.log(msg.content.toString("utf8"));
+				if (fs.existsSync("worker.py")) {
+					console.log("worker.py exists")
+				}
 				py = spawn("python", ["worker.py"])
 				py.stdout.on("data", function(data) {
 					console.log(data.toString());
