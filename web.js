@@ -134,28 +134,30 @@ app.get("/img.png", function(req, res) {
 
 // Publisher
 var q = "tasks";
-open.then(function(conn) {
-	var ok = conn.createChannel();
-	ok = ok.then(function(ch) {
-		app.post("/tracks-svm", function(req, res) {
-			var workerReq = [
-				req.body.method,
-				tmps[req.body.tmpsId].PCA.name,
-				tmps[req.body.tmpsId].CLF.name,
-				tmps[req.body.tmpsId].PNG.name,
-				JSON.stringify(req.body.samples)
-			].join("\n");
 
-			ch.assertQueue(q);
-			ch.sendToQueue(q, new Buffer(workerReq));
 
-			res.end();
+app.post("/tracks-svm", function(req, res) {
+	var workerReq = [
+		req.body.method,
+		tmps[req.body.tmpsId].PCA.name,
+		tmps[req.body.tmpsId].CLF.name,
+		tmps[req.body.tmpsId].PNG.name,
+		JSON.stringify(req.body.samples)
+	].join("\n");
+
+	open.then(function(conn) {
+		var ok = conn.createChannel();
+		ok = ok.then(function(channel) {
+			channel.assertQueue(q);
+			channel.sendToQueue(q, new Buffer(workerReq));
 		});
-		app.listen(process.env.PORT);
-	});
-	return ok;
-}).then(null, console.warn);
+		return ok;
+	}).then(null, console.warn);
 
+	res.end();
+});
+
+app.listen(process.env.PORT);
 
 process.on("exit", function() {
 	for (var tmpsId in tmps) {
