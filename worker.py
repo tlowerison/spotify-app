@@ -66,14 +66,17 @@ class Model:
 
 	def save(self, savePKL=False, savePNG=True):
 		if savePKL:
-			sys.stdout.write(self.pcaPath)
-			sys.stdout.write("\n")
-			sys.stdout.write(self.clfPath)
-			sys.stdout.write("\n")
 			joblib.dump(self.pca, self.pcaPath)
 			joblib.dump(self.clf, self.clfPath)
+
+			sys.stdout.write("PCA Path: " + self.pcaPath + "\n")
+			sys.stdout.write("PCA Size: " + str(os.stat(self.pcaPath).st_size) + "\n")
+			sys.stdout.write("CLF Path: " + self.clfPath + "\n")
+			sys.stdout.write("CLF Size: " + str(os.stat(self.clfPath).st_size) + "\n")
 		if savePNG:
 			plt.savefig(self.pngPath, bbox_inches="tight")
+			sys.stdout.write("PNG Path: " + self.pngPath + "\n")
+			sys.stdout.write("PNG Size: " + str(os.stat(self.pngPath).st_size) + "\n")
 		sys.stdout.write("model saved\n")
 
 	def close(self):
