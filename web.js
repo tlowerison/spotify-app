@@ -149,6 +149,7 @@ app.post("/tracks-svm", function(req, res) {
 	].join("\n");
 
 	tmps[req.body.tmpsId].status = "loading";
+	tmps[req.body.tmpsId].data = "";
 
 	open.then(function(connection) {
 		var options = {
@@ -171,7 +172,8 @@ app.post("/tracks-svm", function(req, res) {
 
 app.get("/img-status", function(req, res) {
 	res.send({
-		status: tmps[req.query.tmpsId].status
+		status: tmps[req.query.tmpsId].status,
+		data: tmps[req.query.tmpsId].data
 	});
 });
 
@@ -185,9 +187,9 @@ open.then(function(conn) {
 		ch.consume("status", function(msg) {
 			if (msg !== null) {
 				console.log("CONSUMING STATUS");
-				var data = JSON.parse(msg.content.toString("utf8"));
-				console.log(data);
-				tmps[data.id].status = data.status;
+				var res = JSON.parse(msg.content.toString("utf8"));
+				tmps[res.id].status = res.status;
+				tmps[res.id].data = res.data;
 				ch.ack(msg);
 			}
 		});

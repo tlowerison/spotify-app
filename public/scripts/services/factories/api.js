@@ -702,7 +702,8 @@ app.factory("apiFactory", function($http, logInFactory) {
 				.then(function(res) {
 					console.log("  status: " + res.data.status)
 					if (res.data.status != "loading") {
-						img.src = "/img.png?tmpsId=" + tmpsId + "&dummy=" + generateRandomString(10);
+						img.src="data:img/png;base64," + res.data.data;
+						//img.src = "/img.png?tmpsId=" + tmpsId + "&dummy=" + generateRandomString(10);
 					} else {
 						setTimeout(poll, 500);
 					}

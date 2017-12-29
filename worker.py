@@ -1,4 +1,4 @@
-import sys, pika, os
+import sys, pika, os, base64, io
 import numpy as np
 import matplotlib
 matplotlib.use("Agg")
@@ -75,8 +75,10 @@ class Model:
 			sys.stdout.write("CLF Size: " + str(os.stat(self.clfPath).st_size) + "\n")
 		if savePNG:
 			sys.stdout.write("PNG Path: " + self.pngPath + "\n")
-			plt.savefig(self.pngPath, bbox_inches="tight")
-			sys.stdout.write("PNG Size: " + str(os.stat(self.pngPath).st_size) + "\n")
+			my_stringIObytes = io.BytesIO()
+			plt.savefig(my_stringIObytes, bbox_inches="tight")
+			my_stringIObytes.seek(0)
+			self.fig_64 = base64.b64encode(my_stringIObytes.read())
 		sys.stdout.write("model saved\n")
 
 	def close(self):
@@ -96,6 +98,7 @@ channel.queue_declare(queue="tasks", durable=True)
 
 def callback(ch, method, properties, body):
 	sys.stdout.write("CONSUMING TASK\n")
+	sys.stdout.flush()
 	lines = body.decode("utf-8").split("\n")
 
 	modelId = lines[0]
@@ -105,26 +108,28 @@ def callback(ch, method, properties, body):
 	pngPath = lines[4]
 	data = eval(lines[5])
 	model = Model(pcaPath, clfPath, pngPath)
-	status = ""
+	modelStatus = ""
+	modelData = ""
 	try:
 		model.methods[modelMethod](data)
 		model.plot(modelMethod, levels=64)
 		model.save(savePKL=(modelMethod=="train"))
-		status = "success"
+		modelStatus = "success"
+		modelData = model.fig_64
 	except Exception as err:
 		sys.stdout.write("Model Error!\n")
-		sys.stdout.write(err)
-		sys.stdout.write("\n")
-		status = "error"
-		
-	callback_prologue(ch, method, model, modelId, status)
+		modelStatus = "error"
+		modelData = ""
 
-def callback_prologue(ch, method, model, id, status):
 	model.close()
+	
+	callback_prologue(ch, method, modelId, modelStatus, modelData)
+
+def callback_prologue(ch, method, id, status, data):
 	sys.stdout.write("PUBLISHING STATUS\n")
-	channel.basic_publish(exchange="", routing_key="status", body="{\"id\": \"" + id + "\",\"status\": \"" + status + "\"}")
 	sys.stdout.flush()
 	ch.basic_ack(delivery_tag=method.delivery_tag)
+	channel.basic_publish(exchange="", routing_key="status", body="{\"id\":\"" + id + "\",\"status\":\"" + status + "\",\"data\":\"" + data.decode("utf-8") + "\"}")
 
 channel.basic_consume(callback, queue="tasks")
 
