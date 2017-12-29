@@ -688,16 +688,27 @@ app.factory("apiFactory", function($http, logInFactory) {
 					"Accept": "image/png",
 					"Content-Type": "application/json"
 				}
-			}).then(function() {
-				var img = new Image();
-				$.confirm({
-					title: "Analysis",
-					content: img,
-					backgroundDismiss: true,
-					columnClass: "col-xs-12 col-md-8 col-md-offset-4"
-				});
-				setTimeout(function() {img.src = "/img.png?tmpsId=" + tmpsId + "&dummy=" + generateRandomString(10)}, 6000)
 			});
+			var img = new Image();
+			$.confirm({
+				title: "Analysis",
+				content: img,
+				backgroundDismiss: true,
+				columnClass: "col-xs-12 col-md-8 col-md-offset-4"
+			});
+			function poll() {
+				console.log("polling")
+				$http.get("/img-status?tmpsId=" + tmpsId)
+				.then(function(res) {
+					console.log("  status: " + res.data.status)
+					if (res.data.status != "loading") {
+						img.src = "/img.png?tmpsId=" + tmpsId + "&dummy=" + generateRandomString(10);
+					} else {
+						setTimeout(poll, 500);
+					}
+				})
+			}
+			setTimeout(poll, 500)
 		}
 	};
 });

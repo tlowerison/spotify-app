@@ -137,9 +137,10 @@ app.get("/img.png", function(req, res) {
 	res.sendFile(tmps[tmpsId].PNG.name);
 })
 
-// Publisher
+// TASK PUBLISHER
 app.post("/tracks-svm", function(req, res) {
 	var workerReq = [
+		req.body.tmpsId,
 		req.body.method,
 		tmps[req.body.tmpsId].PCA.name,
 		tmps[req.body.tmpsId].CLF.name,
@@ -147,6 +148,7 @@ app.post("/tracks-svm", function(req, res) {
 		JSON.stringify(req.body.samples)
 	].join("\n");
 
+	tmps[req.body.tmpsId].status = "loading";
 
 	open.then(function(connection) {
 		var options = {
@@ -158,7 +160,7 @@ app.post("/tracks-svm", function(req, res) {
 		var ok = connection.createChannel();
 		ok = ok.then(function(channel) {
 			channel.assertQueue("tasks");
-			console.log("PUBLISHING");
+			console.log("PUBLISHING TASK");
 			channel.sendToQueue("tasks", new Buffer(workerReq), options);
 		});
 		return ok;
@@ -166,6 +168,33 @@ app.post("/tracks-svm", function(req, res) {
 
 	res.end();
 });
+
+app.get("/img-status", function(req, res) {
+	res.send({
+		status: tmps[req.query.tmpsId].status
+	});
+});
+
+// STATUS CONSUMER
+open.then(function(conn) {
+	var ok = conn.createChannel();
+	ok = ok.then(function(ch) {
+		console.log("STATUS CHANNEL EXISTS")
+		ch.assertQueue("status");
+
+		ch.consume("status", function(msg) {
+			if (msg !== null) {
+				console.log("CONSUMING STATUS");
+				var data = JSON.parse(msg.content.toString("utf8"));
+				console.log(data);
+				tmps[data.id].status = data.status;
+				ch.ack(msg);
+			}
+		});
+	});
+	return ok;
+}).then(null, console.warn);
+
 
 app.listen(process.env.PORT);
 

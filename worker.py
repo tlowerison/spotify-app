@@ -83,6 +83,8 @@ class Model:
 		plt.close()
 		sys.stdout.write("model closed\n")
 
+# TASK CONSUMER
+
 dotenv_path = join(dirname(__file__), ".env")
 load_dotenv(dotenv_path)
 CLOUDAMQP_URL = os.environ.get("CLOUDAMQP_URL")
@@ -93,33 +95,42 @@ channel = connection.channel()
 channel.queue_declare(queue="tasks", durable=True)
 
 def callback(ch, method, properties, body):
-	sys.stdout.write("CONSUMING\n")
+	sys.stdout.write("CONSUMING TASK\n")
 	lines = body.decode("utf-8").split("\n")
 
-	modelMethod = lines[0]
-	pcaPath = lines[1]
-	clfPath = lines[2]
-	pngPath = lines[3]
-	data = eval(lines[4])
+	modelId = lines[0]
+	modelMethod = lines[1]
+	pcaPath = lines[2]
+	clfPath = lines[3]
+	pngPath = lines[4]
+	data = eval(lines[5])
 	model = Model(pcaPath, clfPath, pngPath)
+	status = ""
 	try:
 		model.methods[modelMethod](data)
 		model.plot(modelMethod, levels=64)
 		model.save(savePKL=(modelMethod=="train"))
+		status = "success"
 	except Exception as err:
 		sys.stdout.write("Model Error!\n")
 		sys.stdout.write(err)
 		sys.stdout.write("\n")
-		pass
+		status = "error"
+		
+	callback_prologue(ch, method, model, modelId, status)
 
-	callback_prologue(ch, method, model)
-
-def callback_prologue(ch, method, model):
+def callback_prologue(ch, method, model, id, status):
 	model.close()
+	sys.stdout.write("PUBLISHING STATUS\n")
+	channel.basic_publish(exchange="", routing_key="status", body="{\"id\": \"" + id + "\",\"status\": \"" + status + "\"}")
 	sys.stdout.flush()
 	ch.basic_ack(delivery_tag=method.delivery_tag)
 
 channel.basic_consume(callback, queue="tasks")
 
+# STATUS PUBLISHER
+channel.queue_declare(queue="status", durable=True)
+sys.stdout.write("ready!\n")
 sys.stdout.flush()
+
 channel.start_consuming()
