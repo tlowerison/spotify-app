@@ -1,20 +1,22 @@
-import sys
+import sys, pika, os
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.font_manager as fm
 from sklearn import svm
 from sklearn.decomposition import PCA
 from sklearn.externals import joblib
-
-plotX = (-1.5, 1.5)
-plotY = (-1.5, 1.5)
-xx, yy = np.meshgrid(np.linspace(plotX[0], plotX[1], 200), np.linspace(plotY[0], plotY[1], 200))
-
-pcaPath = ""
-clfPath = ""
-pngPath = ""
+from os.path import join, dirname
+from dotenv import load_dotenv
 
 class Model:
+	def __init__(self, pcaPath, clfPath, pngPath):
+		self.pcaPath = pcaPath
+		self.clfPath = clfPath
+		self.pngPath = pngPath
+		self.plotX = (-1.5, 1.5)
+		self.plotY = (-1.5, 1.5)
+		self.xx, self.yy = np.meshgrid(np.linspace(self.plotX[0], self.plotX[1], 200), np.linspace(self.plotY[0], self.plotY[1], 200))
+
 	def train(self, data, nu=0.25, gamma=5):
 		self.pca = PCA(n_components=2)
 		self.X_train = self.pca.fit_transform(np.array(data))
@@ -25,8 +27,8 @@ class Model:
 		print("trained")
 
 	def test(self, data):
-		self.pca = joblib.load(pcaPath)
-		self.clf = joblib.load(clfPath)
+		self.pca = joblib.load(self.pcaPath)
+		self.clf = joblib.load(self.clfPath)
 
 		self.X_test = self.pca.transform(np.array(data))
 		self.y_pred_test = self.clf.predict(self.X_test)
@@ -34,17 +36,17 @@ class Model:
 
 	def plot(self, method, levels=10):
 		X = self.X_train if method == "train" else self.X_test
-		Z = self.clf.decision_function(np.c_[xx.ravel(), yy.ravel()]).reshape(xx.shape)
+		Z = self.clf.decision_function(np.c_[self.xx.ravel(), self.yy.ravel()]).reshape(self.xx.shape)
 
-		plt.contourf(xx, yy, Z, levels=np.linspace(Z.min(), 0, levels), cmap=plt.get_cmap("inferno"))
-		a = plt.contour(xx, yy, Z, levels=[0], linewidths=2, colors="palevioletred")
+		plt.contourf(self.xx, self.yy, Z, levels=np.linspace(Z.min(), 0, levels), cmap=plt.get_cmap("inferno"))
+		a = plt.contour(self.xx, self.yy, Z, levels=[0], linewidths=2, colors="palevioletred")
 		b = plt.scatter(X[:, 0], X[:, 1], c="orange", s=15, edgecolors="black")
 
 		plt.axis("tight")
 		plt.xticks([])
 		plt.yticks([])
-		plt.xlim(plotX)
-		plt.ylim(plotY)
+		plt.xlim(self.plotX)
+		plt.ylim(self.plotY)
 
 		leg = plt.legend([a.collections[0], b],
 			["Learned Frontier", "Training Observations"],
@@ -56,33 +58,52 @@ class Model:
 	def show(self):
 		plt.show()
 
-	def save(self):
-		joblib.dump(self.pca, pcaPath)
-		joblib.dump(self.clf, clfPath)
-		plt.savefig(pngPath, bbox_inches="tight")
+	def save(self, savePKL=False, savePNG=True):
+		if savePKL:
+			joblib.dump(self.pca, self.pcaPath)
+			joblib.dump(self.clf, self.clfPath)
+		if savePNG:
+			plt.savefig(self.pngPath, bbox_inches="tight")
 		print("saved")
 
-#start process
-if __name__ == "__main__":
-	print("python")
-	lines = sys.stdin.readlines()
-	print("lines")
-	method = lines[0][:len(lines[0]) - 1]
-	pcaPath = lines[1][:len(lines[1]) - 1]
-	clfPath = lines[2][:len(lines[2]) - 1]
-	pngPath = lines[3][:len(lines[3]) - 1]
+	def close(self):
+		plt.close()
+
+dotenv_path = join(dirname(__file__), ".env")
+load_dotenv(dotenv_path)
+CLOUDAMQP_URL = os.environ.get("CLOUDAMQP_URL")
+
+connection = pika.BlockingConnection(pika.connection.URLParameters(CLOUDAMQP_URL))
+channel = connection.channel()
+
+channel.queue_declare(queue="tasks", durable=True)
+
+def callback(ch, method, properties, body):
+	print("CONSUMING")
+	lines = body.decode("utf-8").split("\n")
+
+	modelMethod = lines[0]
+	pcaPath = lines[1]
+	clfPath = lines[2]
+	pngPath = lines[3]
 	data = eval(lines[4])
-	print(method)
-	print(pcaPath)
-	print(clfPath)
-	print(pngPath)
-	print(data)
-	model = Model()
-	if method == "train":
+	model = Model(pcaPath, clfPath, pngPath)
+
+	if modelMethod == "train":
 		model.train(data)
-	elif method == "test":
+	elif modelMethod == "test":
 		model.test(data)
-	elif method == "unit_test":
+	elif modelMethod == "unit_test":
 		unit_test(model)
-	model.plot(method, levels=64)
-	model.save()
+
+	model.plot(modelMethod, levels=64)
+	model.save(savePKL=(modelMethod=="train"))
+	model.close()
+
+	sys.stdout.flush()
+	ch.basic_ack(delivery_tag=method.delivery_tag)
+
+channel.basic_consume(callback, queue="tasks")
+
+sys.stdout.flush()
+channel.start_consuming()

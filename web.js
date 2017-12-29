@@ -23,7 +23,6 @@ var stateKey = "spotify_auth_state";
 var tmps = {};
 var url = process.env.CLOUDAMQP_URL || "amqp://localhost";
 var open = require("amqplib").connect(url);
-var worker = require("./worker.js");
 
 var generateRandomString = function(length) {
 	var text = "";
@@ -139,7 +138,6 @@ app.get("/img.png", function(req, res) {
 })
 
 // Publisher
-var q = "tasks";
 app.post("/tracks-svm", function(req, res) {
 	var workerReq = [
 		req.body.method,
@@ -149,12 +147,19 @@ app.post("/tracks-svm", function(req, res) {
 		JSON.stringify(req.body.samples)
 	].join("\n");
 
-	open.then(function(conn) {
-		var ok = conn.createChannel();
+
+	open.then(function(connection) {
+		var options = {
+			persistent: true,
+			timestamp: Date.now(),
+			contentEncoding: "utf-8",
+			contentType: "text/plain"
+		};
+		var ok = connection.createChannel();
 		ok = ok.then(function(channel) {
-			channel.assertQueue(q);
-			console.log("PUBLISHING")
-			channel.sendToQueue(q, new Buffer(workerReq));
+			channel.assertQueue("tasks");
+			console.log("PUBLISHING");
+			channel.sendToQueue("tasks", new Buffer(workerReq), options);
 		});
 		return ok;
 	}).then(null, console.warn);
