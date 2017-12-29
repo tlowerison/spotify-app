@@ -18,6 +18,10 @@ class Model:
 		self.plotX = (-1.5, 1.5)
 		self.plotY = (-1.5, 1.5)
 		self.xx, self.yy = np.meshgrid(np.linspace(self.plotX[0], self.plotX[1], 200), np.linspace(self.plotY[0], self.plotY[1], 200))
+		self.methods = {
+			"train": self.train,
+			"test": self.test
+		}
 
 	def train(self, data, nu=0.25, gamma=5):
 		self.pca = PCA(n_components=2)
@@ -26,7 +30,7 @@ class Model:
 		self.clf = svm.OneClassSVM(nu=nu, kernel="rbf", gamma=gamma)
 		self.clf.fit(self.X_train)
 		self.y_pred_train = self.clf.predict(self.X_train)
-		sys.stdout.write("trained")
+		sys.stdout.write("trained\n")
 
 	def test(self, data):
 		self.pca = joblib.load(self.pcaPath)
@@ -34,7 +38,7 @@ class Model:
 
 		self.X_test = self.pca.transform(np.array(data))
 		self.y_pred_test = self.clf.predict(self.X_test)
-		sys.stdout.write("tested")
+		sys.stdout.write("tested\n")
 
 	def plot(self, method, levels=10):
 		X = self.X_train if method == "train" else self.X_test
@@ -55,7 +59,7 @@ class Model:
 			loc="lower left", prop=fm.FontProperties(size=9))
 		for text in leg.get_texts():
 			text.set_color("white")
-			sys.stdout.write("plotted")
+			sys.stdout.write("plotted\n")
 
 	def show(self):
 		plt.show()
@@ -66,7 +70,7 @@ class Model:
 			joblib.dump(self.clf, self.clfPath)
 		if savePNG:
 			plt.savefig(self.pngPath, bbox_inches="tight")
-		sys.stdout.write("saved")
+		sys.stdout.write("saved\n")
 
 	def close(self):
 		plt.close()
@@ -81,7 +85,7 @@ channel = connection.channel()
 channel.queue_declare(queue="tasks", durable=True)
 
 def callback(ch, method, properties, body):
-	sys.stdout.write("CONSUMING")
+	sys.stdout.write("CONSUMING\n")
 	lines = body.decode("utf-8").split("\n")
 
 	modelMethod = lines[0]
@@ -90,18 +94,20 @@ def callback(ch, method, properties, body):
 	pngPath = lines[3]
 	data = eval(lines[4])
 	model = Model(pcaPath, clfPath, pngPath)
+	try:
+		model.methods[modelMethod](data)
+		model.plot(modelMethod, levels=64)
+		model.save(savePKL=(modelMethod=="train"))
+	except Exception as err:
+		sys.stdout.write("Model Error!\n")
+		sys.stdout.write(err)
+		sys.stdout.write("\n")
+		pass
 
-	if modelMethod == "train":
-		model.train(data)
-	elif modelMethod == "test":
-		model.test(data)
-	elif modelMethod == "unit_test":
-		unit_test(model)
+	callback_prologue(ch, method, model)
 
-	model.plot(modelMethod, levels=64)
-	model.save(savePKL=(modelMethod=="train"))
+def callback_prologue(ch, method, model):
 	model.close()
-
 	sys.stdout.flush()
 	ch.basic_ack(delivery_tag=method.delivery_tag)
 
