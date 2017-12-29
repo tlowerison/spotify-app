@@ -30,7 +30,7 @@ class Model:
 		self.clf = svm.OneClassSVM(nu=nu, kernel="rbf", gamma=gamma)
 		self.clf.fit(self.X_train)
 		self.y_pred_train = self.clf.predict(self.X_train)
-		sys.stdout.write("trained\n")
+		sys.stdout.write("model trained\n")
 
 	def test(self, data):
 		self.pca = joblib.load(self.pcaPath)
@@ -38,7 +38,7 @@ class Model:
 
 		self.X_test = self.pca.transform(np.array(data))
 		self.y_pred_test = self.clf.predict(self.X_test)
-		sys.stdout.write("tested\n")
+		sys.stdout.write("model tested\n")
 
 	def plot(self, method, levels=10):
 		X = self.X_train if method == "train" else self.X_test
@@ -59,7 +59,7 @@ class Model:
 			loc="lower left", prop=fm.FontProperties(size=9))
 		for text in leg.get_texts():
 			text.set_color("white")
-			sys.stdout.write("plotted\n")
+			sys.stdout.write("model plotted\n")
 
 	def show(self):
 		plt.show()
@@ -70,10 +70,11 @@ class Model:
 			joblib.dump(self.clf, self.clfPath)
 		if savePNG:
 			plt.savefig(self.pngPath, bbox_inches="tight")
-		sys.stdout.write("saved\n")
+		sys.stdout.write("model saved\n")
 
 	def close(self):
 		plt.close()
+		sys.stdout.write("model closed\n")
 
 dotenv_path = join(dirname(__file__), ".env")
 load_dotenv(dotenv_path)
