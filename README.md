@@ -1,9 +1,9 @@
 # Noise Injection & Spotify User Modelling Application
 Developed by Trey Lowerison<br />
 <br />
-Stack: MongoDB Express AngularJS Node.js Python Scikit-Learn<br />
+Stack: Express AngularJS Node.js Python Scikit-Learn RabbitMQ<br />
 <br />
-Website is up!<br />
+Website is up! Desktop is fully functioning, mobile has a serious UI bug.<br />
 <a href="https://spotifynoiseinjection.herokuapp.com">Noisify</a><br />
 <br />
 The app provides basic feature analysis on your Saved Tracks, Saved Albums, Playlists and Recent Tracks.<br />
