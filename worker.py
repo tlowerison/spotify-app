@@ -66,6 +66,10 @@ class Model:
 
 	def save(self, savePKL=False, savePNG=True):
 		if savePKL:
+			sys.stdout.write(self.pcaPath)
+			sys.stdout.write("\n")
+			sys.stdout.write(self.clfPath)
+			sys.stdout.write("\n")
 			joblib.dump(self.pca, self.pcaPath)
 			joblib.dump(self.clf, self.clfPath)
 		if savePNG:
