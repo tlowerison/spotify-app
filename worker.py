@@ -1,7 +1,7 @@
 import sys, pika, os
 import numpy as np
 import matplotlib
-matplotlib.use('Agg')
+matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import matplotlib.font_manager as fm
 from sklearn import svm
@@ -26,7 +26,7 @@ class Model:
 		self.clf = svm.OneClassSVM(nu=nu, kernel="rbf", gamma=gamma)
 		self.clf.fit(self.X_train)
 		self.y_pred_train = self.clf.predict(self.X_train)
-		print("trained")
+		sys.stdout.write("trained")
 
 	def test(self, data):
 		self.pca = joblib.load(self.pcaPath)
@@ -34,7 +34,7 @@ class Model:
 
 		self.X_test = self.pca.transform(np.array(data))
 		self.y_pred_test = self.clf.predict(self.X_test)
-		print("tested")
+		sys.stdout.write("tested")
 
 	def plot(self, method, levels=10):
 		X = self.X_train if method == "train" else self.X_test
@@ -55,7 +55,7 @@ class Model:
 			loc="lower left", prop=fm.FontProperties(size=9))
 		for text in leg.get_texts():
 			text.set_color("white")
-			print("plotted")
+			sys.stdout.write("plotted")
 
 	def show(self):
 		plt.show()
@@ -66,7 +66,7 @@ class Model:
 			joblib.dump(self.clf, self.clfPath)
 		if savePNG:
 			plt.savefig(self.pngPath, bbox_inches="tight")
-		print("saved")
+		sys.stdout.write("saved")
 
 	def close(self):
 		plt.close()
@@ -81,7 +81,7 @@ channel = connection.channel()
 channel.queue_declare(queue="tasks", durable=True)
 
 def callback(ch, method, properties, body):
-	print("CONSUMING")
+	sys.stdout.write("CONSUMING")
 	lines = body.decode("utf-8").split("\n")
 
 	modelMethod = lines[0]
