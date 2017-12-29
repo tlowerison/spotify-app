@@ -1,4 +1,4 @@
-var app = angular.module("MyApp", ["ngRoute", "ngTouch" "cp.ngConfirm", "LocalStorageModule"])
+var app = angular.module("MyApp", ["ngRoute", "ngTouch", "cp.ngConfirm", "LocalStorageModule"])
 .config(function($locationProvider, $routeProvider) {
 	$locationProvider.html5Mode(true);
 	$locationProvider.hashPrefix("");
