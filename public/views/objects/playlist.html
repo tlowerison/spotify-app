@@ -3,7 +3,7 @@
 		<img class="img-large mdc-elevation--z10 section" src="{{currentObject.object.images[0].url}}">
 		<h3 class="title-md section">{{currentObject.object.name}}</h3>
 		<div class="section" style="margin-bottom: 8px">
-			<button class="mdc-button mdc-button--raised" ng-click="analysisPopUp(currentObject.object.type, currentObject.object.overview.samples)">
+			<button class="mdc-button mdc-button--raised" ng-click="analysisPopUp(currentObject.object.type, currentObject.object.overview.samples)" ng-touch="analysisPopUp(currentObject.object.type, currentObject.object.overview.samples)">
 				<h4 class="subtitle">Analysis</h4>
 			</button>
 		</div>
