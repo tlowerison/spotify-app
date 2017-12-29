@@ -10,11 +10,11 @@ from sklearn.externals import joblib
 from os.path import join, dirname
 from dotenv import load_dotenv
 
+# SVM MODEL
 class Model:
-	def __init__(self, pcaPath, clfPath, pngPath):
+	def __init__(self, pcaPath, clfPath):
 		self.pcaPath = pcaPath
 		self.clfPath = clfPath
-		self.pngPath = pngPath
 		self.plotX = (-1.5, 1.5)
 		self.plotY = (-1.5, 1.5)
 		self.xx, self.yy = np.meshgrid(np.linspace(self.plotX[0], self.plotX[1], 200), np.linspace(self.plotY[0], self.plotY[1], 200))
@@ -68,13 +68,7 @@ class Model:
 		if savePKL:
 			joblib.dump(self.pca, self.pcaPath)
 			joblib.dump(self.clf, self.clfPath)
-
-			sys.stdout.write("PCA Path: " + self.pcaPath + "\n")
-			sys.stdout.write("PCA Size: " + str(os.stat(self.pcaPath).st_size) + "\n")
-			sys.stdout.write("CLF Path: " + self.clfPath + "\n")
-			sys.stdout.write("CLF Size: " + str(os.stat(self.clfPath).st_size) + "\n")
 		if savePNG:
-			sys.stdout.write("PNG Path: " + self.pngPath + "\n")
 			my_stringIObytes = io.BytesIO()
 			plt.savefig(my_stringIObytes, bbox_inches="tight")
 			my_stringIObytes.seek(0)
@@ -85,8 +79,8 @@ class Model:
 		plt.close()
 		sys.stdout.write("model closed\n")
 
-# TASK CONSUMER
 
+# AMQP
 dotenv_path = join(dirname(__file__), ".env")
 load_dotenv(dotenv_path)
 CLOUDAMQP_URL = os.environ.get("CLOUDAMQP_URL")
@@ -94,9 +88,11 @@ CLOUDAMQP_URL = os.environ.get("CLOUDAMQP_URL")
 connection = pika.BlockingConnection(pika.connection.URLParameters(CLOUDAMQP_URL))
 channel = connection.channel()
 
+
+# TASK CONSUMER
 channel.queue_declare(queue="tasks", durable=True)
 
-def callback(ch, method, properties, body):
+def task_callback(ch, method, properties, body):
 	sys.stdout.write("CONSUMING TASK\n")
 	sys.stdout.flush()
 	lines = body.decode("utf-8").split("\n")
@@ -105,9 +101,8 @@ def callback(ch, method, properties, body):
 	modelMethod = lines[1]
 	pcaPath = lines[2]
 	clfPath = lines[3]
-	pngPath = lines[4]
-	data = eval(lines[5])
-	model = Model(pcaPath, clfPath, pngPath)
+	data = eval(lines[4])
+	model = Model(pcaPath, clfPath)
 	modelStatus = ""
 	modelData = ""
 	try:
@@ -123,19 +118,38 @@ def callback(ch, method, properties, body):
 
 	model.close()
 	
-	callback_prologue(ch, method, modelId, modelStatus, modelData)
+	task_callback_prologue(ch, method, modelId, modelStatus, modelData)
 
-def callback_prologue(ch, method, id, status, data):
+def task_callback_prologue(ch, method, id, status, data):
 	sys.stdout.write("PUBLISHING STATUS\n")
 	sys.stdout.flush()
 	ch.basic_ack(delivery_tag=method.delivery_tag)
 	channel.basic_publish(exchange="", routing_key="status", body="{\"id\":\"" + id + "\",\"status\":\"" + status + "\",\"data\":\"" + data.decode("utf-8") + "\"}")
 
-channel.basic_consume(callback, queue="tasks")
+channel.basic_consume(task_callback, queue="tasks")
+
+
+# LOGOUT CONSUMER
+channel.queue_declare(queue="logout", durable=True)
+
+def logout_callback(ch, method, properties, body):
+	sys.stdout.write("CONSUMING LOGOUT\n")
+	lines = body.decode("utf-8").split("\n")
+	for path in lines:
+		try:
+			os.remove(path)
+		except Exception as err:
+			pass
+	sys.stdout.flush()
+	ch.basic_ack(delivery_tag=method.delivery_tag)
+
+channel.basic_consume(logout_callback, queue="logout")
+
 
 # STATUS PUBLISHER
 channel.queue_declare(queue="status", durable=True)
 sys.stdout.write("ready!\n")
 sys.stdout.flush()
+
 
 channel.start_consuming()

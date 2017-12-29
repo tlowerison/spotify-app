@@ -1,4 +1,4 @@
-app.factory("logInFactory", function($location, $window, $http) {
+app.factory("logInFactory", function($location, $window, $http, localStorageService) {
 	
 		function refreshLogIn() {
 			return new Promise(function(resolve, reject) {
@@ -11,7 +11,7 @@ app.factory("logInFactory", function($location, $window, $http) {
 				})
 				.then(function(res) {
 					if (res.data.access_token) {
-						setSpotifyTokens(res.data);
+						refreshSpotifyTokens(res.data, localStorageService);
 						resolve();
 					}
 				})
@@ -19,10 +19,20 @@ app.factory("logInFactory", function($location, $window, $http) {
 		}
 		function isLoggedIn() {
 			return new Promise(function(resolve, reject) {
-				if (spotifyHeaders != null) {
+				if (localStorageService.keys().indexOf("spotifyHeaders") != -1) {
+					spotifyHeaders = localStorageService.get("spotifyHeaders")
+				}
+				if (localStorageService.keys().indexOf("refresh_token") != -1) {
+					refresh_token = localStorageService.get("refresh_token")
+				}
+				if (localStorageService.keys().indexOf("tmpsId") != -1) {
+					tmpsId = localStorageService.get("tmpsId")
+				}
+
+				if (spotifyHeaders != null && refresh_token != null && tmpsId != null) {
 					resolve();
 				} else {
-					$location.path("/");
+					//$location.path("/");
 					reject();
 				}
 			});

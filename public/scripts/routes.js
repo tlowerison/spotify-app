@@ -1,4 +1,4 @@
-var app = angular.module("MyApp", ["ngRoute", "cp.ngConfirm"])
+var app = angular.module("MyApp", ["ngRoute", "cp.ngConfirm", "LocalStorageModule"])
 .config(function($locationProvider, $routeProvider) {
 	$locationProvider.html5Mode(true);
 	$locationProvider.hashPrefix("");
@@ -8,11 +8,7 @@ var app = angular.module("MyApp", ["ngRoute", "cp.ngConfirm"])
 		templateUrl: "views/home.html"
 	})
 	.when("/tokens/:access_token/:refresh_token", {
-		templateUrl: "views/home.html",
-		redirectTo: function(params) {
-			setSpotifyTokens(params);
-			return "/";
-		}
+		templateUrl: "views/home.html"
 	})
 	.when("/_=_", {
 		templateUrl: "views/home.html",
@@ -22,7 +18,7 @@ var app = angular.module("MyApp", ["ngRoute", "cp.ngConfirm"])
 		templateUrl: "views/library.html",
 		controller: "Library",
 		resolve: {
-			loggedIn: loggedIn
+			loggedIn: isLoggedIn
 		}
 	})
 	.when("/library/:type", {
@@ -31,7 +27,7 @@ var app = angular.module("MyApp", ["ngRoute", "cp.ngConfirm"])
 		},
 		controller: "Library",
 		resolve: {
-			loggedIn: loggedIn
+			loggedIn: isLoggedIn
 		}
 	})
 	.when("/browse", {
@@ -42,35 +38,20 @@ var app = angular.module("MyApp", ["ngRoute", "cp.ngConfirm"])
 		templateUrl: "views/search.html",
 		controller: "Search"
 	})
-	.when("/login", {
-		templateUrl: "views/login.html"
-	})
-	.when("/logout", {
-		templateUrl: "",
-		redirectTo: function(params) {
-			removeSpotifyTokens(params);
-			return "/";
-		},
-		resolve: {
-			removeTmps: function($http) {
-				$http.get("/logout/")
-			}
-		}
-	})
 	.when("/:type/:id", {
 		templateUrl: function(params) {
 			return "views/objects/" + params.type + ".html";
 		},
 		controller: "Object",
 		resolve: {
-			loggedIn: loggedIn
+			loggedIn: isLoggedIn
 		}
 	})
 	.when("/user/:user/playlist/:id", {
 		templateUrl: "views/objects/playlist.html",
 		controller: "Object",
 		resolve: {
-			loggedIn: loggedIn
+			loggedIn: isLoggedIn
 		}
 	})
 	.otherwise({
@@ -78,7 +59,7 @@ var app = angular.module("MyApp", ["ngRoute", "cp.ngConfirm"])
 	});
 });
 
-function setSpotifyTokens(tokens) {
+function initializeSpotifyTokens(tokens, localStorageService) {
 	spotifyHeaders = {
 		"Accept": "application/json",
 		"Authorization": "Bearer " + tokens.access_token,
@@ -86,15 +67,33 @@ function setSpotifyTokens(tokens) {
 	};
 	refresh_token = tokens.refresh_token;
 	tmpsId = tokens.refresh_token;
+
+	localStorageService.set("spotifyHeaders", spotifyHeaders)
+	localStorageService.set("refresh_token", refresh_token)
+	localStorageService.set("tmpsId", tmpsId)
 }
 
-function removeSpotifyTokens() {
+function refreshSpotifyTokens(tokens, localStorageService) {
+	spotifyHeaders = {
+		"Accept": "application/json",
+		"Authorization": "Bearer " + tokens.access_token,
+		"Content-Type": "application/json"
+	};
+	refresh_token = tokens.refresh_token;
+	tmpsId = localStorageService.get("tmpsId")
+	localStorageService.set("spotifyHeaders", spotifyHeaders)
+	localStorageService.set("refresh_token", refresh_token)
+}
+
+function removeSpotifyTokens($http, localStorageService) {
+	$http.post("/logout", { tmpsId: tmpsId })
 	spotifyHeaders = null;
 	refresh_token = null;
 	tmpsId = null;
+	localStorageService.clearAll();
 }
 
-function loggedIn(logInFactory) {
+function isLoggedIn(logInFactory) {
 	return logInFactory.isLoggedIn();
 }
 

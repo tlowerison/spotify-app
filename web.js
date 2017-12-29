@@ -5,7 +5,6 @@ var request = require("request");
 var bodyParser = require("body-parser");
 var querystring = require("querystring");
 var cookieParser = require("cookie-parser");
-var fs = require("fs");
 
 var app = express();
 app.use(express.static(__dirname + "/public")).use(cookieParser());
@@ -33,7 +32,7 @@ var generateRandomString = function(length) {
 	return text;
 };
 
-app.get("/spotify-login", function(req, res) {
+app.get("/login", function(req, res) {
 	var state = generateRandomString(16);
 	res.cookie(stateKey, state);
 
@@ -74,8 +73,7 @@ app.get("/callback", function(req, res) {
 			if (!error && response.statusCode === 200) {
 				tmps[body.refresh_token] = {
 					PCA: tmp.fileSync({postfix: ".pkl"}),
-					CLF: tmp.fileSync({postfix: ".pkl"}),
-					PNG: tmp.fileSync({postfix: ".png"})
+					CLF: tmp.fileSync({postfix: ".pkl"})
 				}
 				res.redirect("/tokens/" + body.access_token + "/" + body.refresh_token);
 			} else {
@@ -114,28 +112,14 @@ app.post("/refresh", function(req, res) {
 function removeTmps(tmpsId) {
 	tmps[tmpsId].PCA.removeCallback();
 	tmps[tmpsId].CLF.removeCallback();
-	tmps[tmpsId].PNG.removeCallback();
 	delete tmps[tmpsId];
 }
-
-app.delete("/tmps", function(req, res) {
-	var tmpsId = req.query.tmpsId;
-	removeTmps(tmpsId);
-});
 
 // All accessible pages use the basic html index file
 // Individual pages are designed and provided using AngularJS routing
 app.get("/((:page(browse|library|search))|(library/:type(playlists|savedalbums|savedtracks|recentlyplayed))|(:type(playlist|album|artist|track)/:id)|(user/:user/playlist/:id)|(login)|(tokens/:access_token/:refresh_token))", function(req, res) {
 	res.sendFile(__dirname + '/public/index.html');
 });
-
-app.get("/img.png", function(req, res) {
-	var tmpsId = req.query.tmpsId;
-	var stats = fs.statSync(tmps[tmpsId].PNG.name)
-	var fileSizeInBytes = stats["size"]
-	console.log("Retrieving image at " + tmps[tmpsId].PNG.name + " with file size " + fileSizeInBytes.toString());
-	res.sendFile(tmps[tmpsId].PNG.name);
-})
 
 // TASK PUBLISHER
 app.post("/tracks-svm", function(req, res) {
@@ -144,7 +128,6 @@ app.post("/tracks-svm", function(req, res) {
 		req.body.method,
 		tmps[req.body.tmpsId].PCA.name,
 		tmps[req.body.tmpsId].CLF.name,
-		tmps[req.body.tmpsId].PNG.name,
 		JSON.stringify(req.body.samples)
 	].join("\n");
 
@@ -170,18 +153,38 @@ app.post("/tracks-svm", function(req, res) {
 	res.end();
 });
 
-app.get("/img-status", function(req, res) {
-	res.send({
-		status: tmps[req.query.tmpsId].status,
-		data: tmps[req.query.tmpsId].data
-	});
+// LOGOUT PUBLISHER
+app.post("/logout", function(req, res) {
+	var tmpsId = req.body.tmpsId;
+	if (tmpsId in tmps) {
+		open.then(function(connection) {
+			var options = {
+				persistent: true,
+				timestamp: Date.now(),
+				contentEncoding: "utf-8",
+				contentType: "text/plain"
+			};
+			var ok = connection.createChannel();
+			ok = ok.then(function(channel) {
+				channel.assertQueue("logout");
+				console.log("PUBLISHING LOGOUT");
+				var data = [
+					tmps[tmpsId].PCA.name,
+					tmps[tmpsId].CLF.name
+				].join("\n")
+				channel.sendToQueue("logout", new Buffer(data), options);
+				removeTmps(tmpsId);
+			});
+			return ok;
+		}).then(null, console.warn);
+	}
+	res.sendFile(__dirname + '/public/index.html');
 });
 
 // STATUS CONSUMER
 open.then(function(conn) {
 	var ok = conn.createChannel();
 	ok = ok.then(function(ch) {
-		console.log("STATUS CHANNEL EXISTS")
 		ch.assertQueue("status");
 
 		ch.consume("status", function(msg) {
@@ -197,11 +200,11 @@ open.then(function(conn) {
 	return ok;
 }).then(null, console.warn);
 
+app.get("/img-status", function(req, res) {
+	res.send({
+		status: tmps[req.query.tmpsId].status,
+		data: tmps[req.query.tmpsId].data
+	});
+});
 
 app.listen(process.env.PORT);
-
-process.on("exit", function() {
-	for (var tmpsId in tmps) {
-		removeTmps(tmpsId);
-	}
-});

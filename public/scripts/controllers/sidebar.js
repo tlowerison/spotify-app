@@ -1,4 +1,5 @@
-app.controller("Sidebar", function($scope, $location, logInFactory) {
+app.controller("Sidebar", function($scope, $http, $location, $routeParams, logInFactory, localStorageService) {
+	console.log("refresh sidebar")
 	function loggedInSidebar() {
 		$("#sidebar-browse").show()
 		$("#sidebar-library").show()
@@ -13,6 +14,18 @@ app.controller("Sidebar", function($scope, $location, logInFactory) {
 		$("#sidebar-search").hide()
 		$("#sidebar-login").show()
 		$("#sidebar-logout").hide()
+		removeSpotifyTokens($http, localStorageService)
+		$http.post("/logout", { tmpsId: tmpsId })
+		$location.path("/");
+	}
+
+	if ($location.path().slice(0, 7) == "/tokens") {
+		var url = $location.path().split('/');
+		initializeSpotifyTokens({
+			access_token: url[2],
+			refresh_token: url[3]
+		}, localStorageService)
+		$location.path("/");
 	}
 
 	logInFactory.isLoggedIn()
