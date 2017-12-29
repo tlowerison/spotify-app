@@ -1,2 +1,2 @@
 web: node web.js
-worker: python worker2.py
+worker: python worker.py
