@@ -1,5 +1,4 @@
 app.controller("Sidebar", function($scope, $http, $location, $routeParams, logInFactory, localStorageService) {
-	console.log("refresh sidebar")
 	function loggedInSidebar() {
 		$("#sidebar-browse").show()
 		$("#sidebar-library").show()
