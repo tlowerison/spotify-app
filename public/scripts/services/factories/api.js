@@ -696,7 +696,7 @@ app.factory("apiFactory", function($http, logInFactory) {
 					backgroundDismiss: true,
 					columnClass: "col-xs-12 col-md-8 col-md-offset-4"
 				});
-				setTimeout(function() {img.src = "/img.png?tmpsId=" + tmpsId + "&dummy=" + generateRandomString(10)}, 4000)
+				setTimeout(function() {img.src = "/img.png?tmpsId=" + tmpsId + "&dummy=" + generateRandomString(10)}, 6000)
 			});
 		}
 	};
