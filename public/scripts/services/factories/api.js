@@ -689,21 +689,19 @@ app.factory("apiFactory", function($http, logInFactory) {
 					"Content-Type": "application/json"
 				}
 			});
-			var img = new Image();
 			$.confirm({
 				title: "Analysis",
-				content: img,
+				content: "<div style=\"margin-left:auto;margin-right:auto;text-align:center;\"><div class=\"spinner\" style=\"width:100px;height:80px;font-size:15px\"><div class=\"rect1 dialog\"></div><div class=\"rect2 dialog\"></div><div class=\"rect3 dialog\"></div><div class=\"rect4 dialog\"></div><div class=\"rect5 dialog\"></div></div><img id=\"pic\"></div>",
 				backgroundDismiss: true,
 				columnClass: "col-xs-12 col-md-8 col-md-offset-4"
 			});
 			function poll() {
-				console.log("polling")
 				$http.get("/img-status?tmpsId=" + tmpsId)
 				.then(function(res) {
-					console.log("  status: " + res.data.status)
 					if (res.data.status != "loading") {
-						img.src="data:img/png;base64," + res.data.data;
-						//img.src = "/img.png?tmpsId=" + tmpsId + "&dummy=" + generateRandomString(10);
+						$(".spinner").fadeOut(function() {
+							$("#pic").attr("src", "data:img/png;base64," + res.data.data);
+						})
 					} else {
 						setTimeout(poll, 500);
 					}
