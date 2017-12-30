@@ -148,8 +148,5 @@ channel.basic_consume(logout_callback, queue="logout")
 
 # STATUS PUBLISHER
 channel.queue_declare(queue="status", durable=True)
-sys.stdout.write("ready!\n")
-sys.stdout.flush()
-
 
 channel.start_consuming()
