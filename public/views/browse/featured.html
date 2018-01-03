@@ -1,0 +1,17 @@
+<div ng-init="init('featured')">
+	<div class="row section">
+		<!-- Browse -->
+		<div class="col-xs-12 col-sm-4 col-sm-offset-4"><h2 class="title section">Featured</h2></div>
+	</div>
+	<div class="row section" ng-repeat="playlistGroup in featuredPlaylists">
+		<div class="row section">
+			<div class="col-xs-12 col-sm-4 col-sm-offset-4"><h3 class="title-md section">{{playlistGroup.message}}<h3></div>
+		</div>
+		<div class="col-xs-6 col-sm-4 col-md-3 col-lg-2 col-xl-2 img-row" ng-repeat="playlist in playlistGroup.playlists">
+			<a class="plain-link" href="/user/{{playlist.owner.id}}/playlist/{{playlist.id}}" ng-click="onObjectClick('playlists', playlist.id)">
+				<img class="img-sm mdc-elevation--z10" src="{{playlist.images[0].url}}">
+				<h2 class="object-title">{{playlist.name}}</h2>
+			</a>
+		</div>
+	</div>
+</div>

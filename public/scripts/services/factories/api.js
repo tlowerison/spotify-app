@@ -570,6 +570,7 @@ app.factory("apiFactory", function($http, logInFactory) {
 
 	return {
 		call: function(endpoint, data) {
+			console.log(endpoint);
 			return endpointPromiseGenerators[endpoint](data)
 			.catch(function(err) {
 				console.log(err);
@@ -583,8 +584,8 @@ app.factory("apiFactory", function($http, logInFactory) {
 		},
 		parseTracklistFeatures: function(tracklist) {
 			return new Promise(function(RESOLVE) {
-				var features = [];
-				var avgFeatures = {
+				var fullFeatureSamples = [];
+				var avgSample = {
 					"Danceability": 0,
 					"Energy": 0,
 					"Loudness": 0,
@@ -593,12 +594,11 @@ app.factory("apiFactory", function($http, logInFactory) {
 					"Instrumentalness": 0,
 					"Liveness": 0,
 					"Valence": 0,
-					"Tempo": 0,
-					"Popularity": 0
+					"Tempo": 0
 				}
 
 				if (tracklist == undefined || tracklist.length == 0) {
-					RESOLVE(features, avgFeatures);
+					RESOLVE(fullFeatureSamples, avgSample);
 					return;
 				}
 				
@@ -616,49 +616,46 @@ app.factory("apiFactory", function($http, logInFactory) {
 					promises.push(new Promise(function(resolve) {
 						endpointPromiseGenerators["Get Audio Features for Several Tracks"]({ ids: queryIds })
 						.then(function(res) {
-							features = features.concat(res.data.audio_features);
+							fullFeatureSamples = fullFeatureSamples.concat(res.data.audio_features);
 							resolve();
 						});
 					}));
 					i += 100;
 				}
+
 				Promise.all(promises).then(function() {
-					for (var i = 0; i < features.length; i += 1) {
-						if (features[i] == null || tracklist[i] == undefined) {
-							features.splice(i, 1);
+					for (var i = 0; i < fullFeatureSamples.length; i += 1) {
+						if (fullFeatureSamples[i] == null || tracklist[i] == undefined) {
+							fullFeatureSamples.splice(i, 1);
 							tracklist.splice(i, 1);
 							i -= 1;
 							continue;
 						}
-						//features[i].popularity = tracklist[i].popularity;
-						//if (tracklist[i].popularity == null || tracklist[i].popularity == NaN)
-							//console.log(i, tracklist[i]);
 					}
 
-					// clean up samples
-						clean(features, undefined);
-						for (var i in features) {
-							var track = features[i];
-							for (var j in removedFeatures) {
-								var key = removedFeatures[j];
-								delete track[key];
-							}
+					clean(fullFeatureSamples, undefined);
+					for (var i in fullFeatureSamples) {
+						var track = fullFeatureSamples[i];
+						for (var j in removedFeatures) {
+							var key = removedFeatures[j];
+							delete track[key];
 						}
+					}
 
-						var trackFeatures = features.map(function(obj) {
-							return Object.keys(obj).map(function(key) {
-								return obj[key];
-							});
+					var samples = fullFeatureSamples.map(function(obj) {
+						return Object.keys(obj).map(function(key) {
+							return obj[key];
 						});
+					});
 
-					for (var j = 0; j < features.length; j += 1) {
-						for (var key in avgFeatures) {
-							avgFeatures[key] += features[j][key.toLowerCase()];
+					for (var j = 0; j < fullFeatureSamples.length; j += 1) {
+						for (var key in avgSample) {
+							avgSample[key] += fullFeatureSamples[j][key.toLowerCase()];
 						}
 					}
-					if (features.length > 0) {
-						for (var key in avgFeatures) {
-							avgFeatures[key] /= features.length;
+					if (fullFeatureSamples.length > 0) {
+						for (var key in avgSample) {
+							avgSample[key] /= fullFeatureSamples.length;
 						}
 					}
 
@@ -667,9 +664,12 @@ app.factory("apiFactory", function($http, logInFactory) {
 							scaleTrack(data[i]);
 						}
 					}
-					scaleSpotifyFeaturesData(trackFeatures);
+					scaleSpotifyFeaturesData(samples);
 
-					RESOLVE([trackFeatures, avgFeatures]);
+					RESOLVE({
+						samples: samples,
+						avgSample: avgSample
+					});
 				});
 			});
 		},
@@ -698,6 +698,7 @@ app.factory("apiFactory", function($http, logInFactory) {
 			function poll() {
 				$http.get("/img-status?tmpsId=" + tmpsId)
 				.then(function(res) {
+				console.log("poll status:", res.data.status)
 					if (res.data.status != "loading") {
 						$(".spinner").fadeOut(function() {
 							$("#pic").attr("src", "data:img/png;base64," + res.data.data);
@@ -723,126 +724,128 @@ var generateRandomString = function(length) {
 
 var spotifyEndpointQueryParameters = {
 	// Albums
-	"Get an Album": ["market"],
-	"Get an Album's Tracks": ["limit", "offset", "market"],
-	"Get Several Albums": ["ids", "market"],
+		"Get an Album": ["market"],
+		"Get an Album's Tracks": ["limit", "offset", "market"],
+		"Get Several Albums": ["ids", "market"],
 	// Artists
-	"Get an Artist": [],
-	"Get an Artist's Albums": ["album_type", "market", "limit", "offset"],
-	"Get an Artist's Top Tracks": ["country"],
-	"Get an Artist's Related Artists": [],
-	"Get Several Artists": ["ids"],
+		"Get an Artist": [],
+		"Get an Artist's Albums": ["album_type", "market", "limit", "offset"],
+		"Get an Artist's Top Tracks": ["country"],
+		"Get an Artist's Related Artists": [],
+		"Get Several Artists": ["ids"],
 	// Browse
-	"Get a Category": ["country", "locale"],
-	"Get a Category's Playlists": ["country", "limit", "offset"],
-	"Get a List of Categories": ["country", "locale", "limit", "offset"],
-	"Get a List of Featured Playlists": ["locale", "country", "timestamp", "limit", "offset"],
-	"Get a List of New Releases": ["country", "limit", "offset"],
-	"Get Recommendations": [
-		"limit",
-		"market",
-		"max_danceability",
-		"max_energy",
-		"max_key",
-		"max_loudness",
-		"max_mode",
-		"max_speechiness",
-		"max_acousticness",
-		"max_instrumentalness",
-		"max_liveness",
-		"max_valence",
-		"max_tempo",
-		"max_duration_ms",
-		"max_time_signature",
-		"max_popularity",
-		"min_danceability",
-		"min_energy",
-		"min_key",
-		"min_loudness",
-		"min_mode",
-		"min_speechiness",
-		"min_acousticness",
-		"min_instrumentalness",
-		"min_liveness",
-		"min_valence",
-		"min_tempo",
-		"min_duration_ms",
-		"min_time_signature",
-		"min_popularity",
-		"seed_artists",
-		"seed_genres",
-		"seed_tracks",
-		"target_danceability",
-		"target_energy",
-		"target_key",
-		"target_loudness",
-		"target_mode",
-		"target_speechiness",
-		"target_acousticness",
-		"target_instrumentalness",
-		"target_liveness",
-		"target_valence",
-		"target_tempo",
-		"target_duration_ms",
-		"target_time_signature",
-	],
+		"Get a Category": ["country", "locale"],
+		"Get a Category's Playlists": ["country", "limit", "offset"],
+		"Get a List of Categories": ["country", "locale", "limit", "offset"],
+		"Get a List of Featured Playlists": ["locale", "country", "timestamp", "limit", "offset"],
+		"Get a List of New Releases": ["country", "limit", "offset"],
+		"Get Recommendations": [
+			"limit",
+			"market",
+			"max_danceability",
+			"max_energy",
+			"max_key",
+			"max_loudness",
+			"max_mode",
+			"max_speechiness",
+			"max_acousticness",
+			"max_instrumentalness",
+			"max_liveness",
+			"max_valence",
+			"max_tempo",
+			"max_duration_ms",
+			"max_time_signature",
+			"max_popularity",
+			"min_danceability",
+			"min_energy",
+			"min_key",
+			"min_loudness",
+			"min_mode",
+			"min_speechiness",
+			"min_acousticness",
+			"min_instrumentalness",
+			"min_liveness",
+			"min_valence",
+			"min_tempo",
+			"min_duration_ms",
+			"min_time_signature",
+			"min_popularity",
+			"seed_artists",
+			"seed_genres",
+			"seed_tracks",
+			"target_danceability",
+			"target_energy",
+			"target_key",
+			"target_loudness",
+			"target_mode",
+			"target_speechiness",
+			"target_acousticness",
+			"target_instrumentalness",
+			"target_liveness",
+			"target_valence",
+			"target_tempo",
+			"target_duration_ms",
+			"target_time_signature",
+		],
 	// Follow
-	"Check if Current User Follows Artists or Users": ["type", "ids"],
-	"Check if Users Follow a Playlist": ["ids"],
-	"Follow Artists or Users": ["type", "ids"],
-	"Follow a Playlist": [],
-	"Get User's Followed Artists": ["type", "limit", "after"],
-	"Unfollow Artists or Users": ["type", "ids"],
-	"Unfollow a Playlist": [],
+		"Check if Current User Follows Artists or Users": ["type", "ids"],
+		"Check if Users Follow a Playlist": ["ids"],
+		"Follow Artists or Users": ["type", "ids"],
+		"Follow a Playlist": [],
+		"Get User's Followed Artists": ["type", "limit", "after"],
+		"Unfollow Artists or Users": ["type", "ids"],
+		"Unfollow a Playlist": [],
 	// Personalization
-	"Get a User's Top Artists and Tracks": ["limit", "offset", "time_range"],
+
+		"Get a User's Top Artists and Tracks": ["limit", "offset", "time_range"],
 	// Player
-	"Get a User's Available Devices": [],
-	"Get Information About The User's Current Playback": ["market"],
-	"Get Current User's Recently Played Tracks": ["limit", "after", "before"],
-	"Get the User's Currently Playing Track": ["market"],
-	"Pause a User's Playback": ["device_id"],
-	"Seek To Position In Currently Playing Track": ["position_ms", "device_id"],
-	"Set Repeat Mode On User’s Playback": ["state", "device_id"],
-	"Set Volume For User's Playback": ["volume_percent", "device_id"],
-	"Skip User’s Playback To Next Track": ["device_id"],
-	"Skip User’s Playback To Previous Track": ["device_id"],
-	"Start/Resume a User's Playback": ["device_id"],
-	"Toggle Shuffle For User’s Playback": ["state", "device_id"],
-	"Transfer a User's Playback": ["device_id", "play"],
+		"Get a User's Available Devices": [],
+		"Get Information About The User's Current Playback": ["market"],
+		"Get Current User's Recently Played Tracks": ["limit", "after", "before"],
+		"Get the User's Currently Playing Track": ["market"],
+		"Pause a User's Playback": ["device_id"],
+		"Seek To Position In Currently Playing Track": ["position_ms", "device_id"],
+		"Set Repeat Mode On User’s Playback": ["state", "device_id"],
+		"Set Volume For User's Playback": ["volume_percent", "device_id"],
+		"Skip User’s Playback To Next Track": ["device_id"],
+		"Skip User’s Playback To Previous Track": ["device_id"],
+		"Start/Resume a User's Playback": ["device_id"],
+		"Toggle Shuffle For User’s Playback": ["state", "device_id"],
+		"Transfer a User's Playback": ["device_id", "play"],
 	// Playlists
-	"Add Tracks to a Playlist": ["uris", "position"],
-	"Change a Playlist's Details": [],
-	"Create a Playlist": [],
-	"Get a List of Current User's Playlists": ["limit", "offset"],
-	"Get a List of a User's Playlists": ["limit", "offset"],
-	"Get a Playlist Cover Image": [],
-	"Get a Playlist": ["fields", "market"],
-	"Get a Playlist's Tracks": ["fields", "limit", "offset", "market"],
-	"Remove Tracks from a Playlist": [],
-	"Reorder a Playlist's Tracks": [],
-	"Replace a Playlist's Tracks": ["uris"],
-	"Upload a Custom Playlist Cover Image": [],
+		"Add Tracks to a Playlist": ["uris", "position"],
+		"Change a Playlist's Details": [],
+		"Create a Playlist": [],
+		"Get a List of Current User's Playlists": ["limit", "offset"],
+		"Get a List of a User's Playlists": ["limit", "offset"],
+		"Get a Playlist Cover Image": [],
+		"Get a Playlist": ["fields", "market"],
+		"Get a Playlist's Tracks": ["fields", "limit", "offset", "market"],
+		"Remove Tracks from a Playlist": [],
+		"Reorder a Playlist's Tracks": [],
+		"Replace a Playlist's Tracks": ["uris"],
+		"Upload a Custom Playlist Cover Image": [],
 	// Search
-	"Search": ["market", "limit", "offset"],
+
+		"Search": ["market", "limit", "offset"],
 	// Tracks
-	"Get Audio Analysis for a Track": [],
-	"Get Audio Features for a Track": [],
-	"Get Audio Features for Several Tracks": ["ids"],
-	"Get Several Tracks": ["ids", "market"],
-	"Get a Track": ["market"],
+		"Get Audio Analysis for a Track": [],
+		"Get Audio Features for a Track": [],
+		"Get Audio Features for Several Tracks": ["ids"],
+		"Get Several Tracks": ["ids", "market"],
+		"Get a Track": ["market"],
 	// Library
-	"Check User's Saved Albums": ["ids"],
-	"Check User's Saved Tracks": ["ids"],
-	"Get Current User's Saved Albums": ["limit", "offset", "market"],
-	"Get Current User's Saved Tracks": ["limit", "offset", "market"],
-	"Remove Albums for Current User": ["ids"],
-	"Remove User's Saved Tracks": ["ids"],
-	"Save Albums for Current User": ["ids"],
-	"Save Tracks for Current User": ["ids"],
+		"Check User's Saved Albums": ["ids"],
+		"Check User's Saved Tracks": ["ids"],
+		"Get Current User's Saved Albums": ["limit", "offset", "market"],
+		"Get Current User's Saved Tracks": ["limit", "offset", "market"],
+		"Remove Albums for Current User": ["ids"],
+		"Remove User's Saved Tracks": ["ids"],
+		"Save Albums for Current User": ["ids"],
+		"Save Tracks for Current User": ["ids"],
 	// User's Profile
-	"Get Current User's Profile": [],
-	"Get User's Profile": [],
+		"Get Current User's Profile": [],
+		"Get User's Profile": [],
 };
 
 var spotifyEndpointBodyParameters = {
@@ -875,14 +878,14 @@ var spotifyEndpointBodyParameters = {
 };
 
 var removedFeatures = [
-	'analysis_url',
-	'duration_ms',
-	'id',
-	'key',
-	'mode',
-	'track_href',
-	'type',
-	'uri'
+	"analysis_url",
+	"duration_ms",
+	"id",
+	"key",
+	"mode",
+	"track_href",
+	"type",
+	"uri"
 ];
 
 

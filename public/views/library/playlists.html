@@ -1,6 +1,6 @@
 <div ng-init="init()">
 	<div class="row section">
-		<!-- Librrary -->
+		<!-- Library -->
 		<div class="col-xs-12 col-sm-4">
 			<h2>
 				<div id="user-model">
@@ -23,7 +23,7 @@
 	</div>
 	<div class="row section">
 		<div class="col-xs-6 col-sm-4 col-md-3 col-lg-2 col-xl-2 img-row" ng-repeat="playlist in playlists">
-			<a class="plain-link" href="/user/{{playlist.owner.id}}/playlist/{{playlist.id}}" ng-click="onObjectClick('playlists', playlist.id)">
+			<a class="plain-link" href="/user/{{playlist.owner.id}}/playlist/{{playlist.id}}" ng-click="onObjectClick('savedPlaylists', playlist.id)">
 				<img class="img-sm mdc-elevation--z10" src="{{playlist.images[0].url}}">
 				<h2 class="object-title">{{playlist.name}}</h2>
 			</a>

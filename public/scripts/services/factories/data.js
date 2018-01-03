@@ -1,6 +1,6 @@
 app.factory("dataFactory", function($location, apiFactory, logInFactory) {
 	var service = {
-		playlists: {},
+		savedPlaylists: {},
 		savedAlbums: {},
 		savedTracks: {},
 		recentlyPlayed: [],
@@ -13,21 +13,37 @@ app.factory("dataFactory", function($location, apiFactory, logInFactory) {
 			"playlists": []
 		},
 		userModelLoaded: false,
-		libraryUrl: {},
 		queryType: "track,album,artist,playlist",
-		overview: function(type, playlist_id) {
+		overview: function(type, id) {
 			var source = undefined, dest = undefined, append = true, preOverviewPromise = undefined;
 			switch (type) {
-				case "playlists":
-					source = service.playlists[playlist_id].tracks
-					dest = service.playlists[playlist_id]
-					preOverviewPromise = loadPlaylistTracks(playlist_id, service.playlists[playlist_id].owner.id, true)
+				case "playlist":
+					source = service.savedPlaylists[id].tracks
+					dest = service.savedPlaylists[id]
+					preOverviewPromise = loadPlaylistTracks(id, service.savedPlaylists[id].owner.id, true)
 					// do not include spotify generated playlists in library analysis
-					append = service.playlists[playlist_id].owner.id != "spotify"
+					append = service.savedPlaylists[id].owner.id != "spotify"
+					break;
+				case "album":
+					source = service.savedAlbums.albums[id].tracks
+					dest = service.savedAlbums.albums[id]
+					break;
+				case "savedPlaylists":
+					// Assume all saved albums' overviews have already been loaded.
+					return new Promise(function(resolve) {
+						service.savedPlaylists.overview = [];
+						for (var playlist in service.savedPlaylists)
+							service.savedPlaylists.overview = service.savedPlaylists.overview.concat(playlist.overview);
+					})
 					break;
 				case "savedAlbums":
-					source = service.savedAlbums.tracks
-					dest = service.savedAlbums
+					// Assume all saved albums' overviews have already been loaded.
+					return new Promise(function(resolve) {
+						service.savedAlbums.overview = [];
+						for (var album in service.savedAlbums)
+							service.savedAlbums.overview = service.savedAlbums.overview.concat(album.overview);
+						resolve();
+					});
 					break;
 				case "savedTracks":
 					source = service.savedTracks.tracks
@@ -41,20 +57,15 @@ app.factory("dataFactory", function($location, apiFactory, logInFactory) {
 					return;
 			}
 
-			if (service.overviewed[type == "playlists" ? playlist_id : type])
-				return new Promise(function(resolve) {resolve()});
-			else
-				service.overviewed[type == "playlists" ? playlist_id : type] = true
-
-			return getOverview(source, dest, append, preOverviewPromise, playlist_id);
+			return getOverview(source, dest, append, preOverviewPromise, id);
 		},
-		libraryPromises: [
-			getUserPlaylists(),
-			getUserSavedTracks(),
-			getUserSavedAlbums(),
-			getRecentlyPlayed()
-		],
 		loadFullLibrary: function() {
+			service.libraryPromises = [
+				getUserPlaylists(),
+				getUserSavedAlbums(),
+				getUserSavedTracks(),
+				getRecentlyPlayed()
+			];
 			return new Promise(function(resolve) {
 				Promise.all(service.libraryPromises)
 				.then(function() {
@@ -63,11 +74,12 @@ app.factory("dataFactory", function($location, apiFactory, logInFactory) {
 					var overviewPromises = [];
 
 					// Load Playlist Tracks
-					for (var playlist_id in service.playlists)
-						overviewPromises.push(service.overview("playlists", playlist_id));
+					for (var playlist_id in service.savedPlaylists)
+						overviewPromises.push(service.overview("playlist", playlist_id));
 					
 					// Load Saved Albums
-					overviewPromises.push(service.overview("savedAlbums"));
+					for (var album_id in service.savedAlbums.albums)
+						overviewPromises.push(service.overview("album", album_id));
 
 					// Load Saved Tracks
 					overviewPromises.push(service.overview("savedTracks"));
@@ -123,7 +135,12 @@ app.factory("dataFactory", function($location, apiFactory, logInFactory) {
 				}
 			});
 		},
-		overviewed: {}
+		objectCache: {
+			"playlist": {},
+			"album": {},
+			"artist": {},
+			"track": {}
+		}
 	};
 
 	function getUserPlaylists() {
@@ -133,8 +150,9 @@ app.factory("dataFactory", function($location, apiFactory, logInFactory) {
 				apiFactory.call("Get a List of Current User's Playlists")
 				.then(function(res) {
 					for (var i = 0; i < res.data.items.length; i += 1) {
-						service.playlists[res.data.items[i].id] = res.data.items[i];
-						service.playlists[res.data.items[i].id].tracks = [];
+						service.savedPlaylists[res.data.items[i].id] = res.data.items[i];
+						service.savedPlaylists[res.data.items[i].id].tracks = [];
+						service.objectCache.playlist[res.data.items[i].id] = service.savedPlaylists[res.data.items[i].id];
 					}
 					resolve();
 				});
@@ -148,10 +166,16 @@ app.factory("dataFactory", function($location, apiFactory, logInFactory) {
 			.then(function() {
 				apiFactory.call("Get Current User's Saved Albums")
 				.then(function(res) {
+					var trackPromises = [];
 					var albums = {};
-					for (var i in res.data.items) {
-						albums[res.data.items[i].album.id] = res.data.items[i].album;
-						albums[res.data.items[i].album.id].tracks = albums[res.data.items[i].album.id].tracks.items;
+					for (var j in res.data.items) {
+						function foo(i) {
+							var album = res.data.items[i].album;
+							album.tracks = album.tracks.items;
+							albums[album.id] = album;
+							service.objectCache.album[album.id] = albums[album.id];
+						}
+						foo(j);
 					}
 					var allAlbumTracks = Object.values(albums).map(function(album) {
 						return album.tracks;
@@ -160,7 +184,7 @@ app.factory("dataFactory", function($location, apiFactory, logInFactory) {
 						albums: albums,
 						tracks: [].concat.apply([], allAlbumTracks)
 					};
-					resolve();
+					Promise.all(trackPromises).then(function() { resolve(); });
 				});
 			});
 		});
@@ -175,6 +199,8 @@ app.factory("dataFactory", function($location, apiFactory, logInFactory) {
 					service.savedTracks = {
 						tracks: res.data.items.map(function(t) { return t.track; })
 					};
+					for (var i in service.savedTracks.tracks)
+						service.objectCache.track[service.savedTracks.tracks[i].id] = service.savedTracks.tracks[i];
 					resolve();
 				});
 			});
@@ -190,6 +216,8 @@ app.factory("dataFactory", function($location, apiFactory, logInFactory) {
 					service.recentlyPlayed = {
 						tracks: res.data.items.map(function(item) { return item.track; })
 					};
+					for (var i in service.savedTracks.tracks)
+						service.objectCache.track[service.recentlyPlayed.tracks[i].id] = service.recentlyPlayed.tracks[i];
 					resolve();
 				});
 			});
@@ -211,12 +239,12 @@ app.factory("dataFactory", function($location, apiFactory, logInFactory) {
 
 				RESOLVE(new Promise(function(resolve) {
 					apiFactory.parseTracklistFeatures(source)
-					.then(function(featureLst) {
+					.then(function(res) {
 						dest.overview = {
-							samples: featureLst[0],
-							avgFeatures: featureLst[1]
+							samples: res.samples,
+							avgSample: res.avgSample
 						};
-						if (append) appendToAllFeatureSamples(featureLst[0]);
+						if (append) appendToAllFeatureSamples(res.samples);
 						resolve();
 					});
 				}));
@@ -233,7 +261,7 @@ app.factory("dataFactory", function($location, apiFactory, logInFactory) {
 			.then(function(res) {
 				var dest = [];
 				if (saved) {
-					dest = service.playlists[playlist_id].tracks;
+					dest = service.savedPlaylists[playlist_id].tracks;
 				}
 				for (var i in res.data.items) {
 					var track = res.data.items[i].track;

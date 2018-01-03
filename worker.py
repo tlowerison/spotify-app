@@ -79,7 +79,6 @@ class Model:
 		plt.close()
 		sys.stdout.write("model closed\n")
 
-
 # AMQP
 dotenv_path = join(dirname(__file__), ".env")
 load_dotenv(dotenv_path)
@@ -87,7 +86,6 @@ CLOUDAMQP_URL = os.environ.get("CLOUDAMQP_URL")
 
 connection = pika.BlockingConnection(pika.connection.URLParameters(CLOUDAMQP_URL))
 channel = connection.channel()
-
 
 # TASK CONSUMER
 channel.queue_declare(queue="tasks", durable=True)
@@ -119,6 +117,7 @@ def task_callback(ch, method, properties, body):
 	model.close()
 	
 	task_callback_prologue(ch, method, modelId, modelStatus, modelData)
+	
 
 def task_callback_prologue(ch, method, id, status, data):
 	sys.stdout.write("PUBLISHING STATUS\n")
@@ -127,7 +126,6 @@ def task_callback_prologue(ch, method, id, status, data):
 	channel.basic_publish(exchange="", routing_key="status", body="{\"id\":\"" + id + "\",\"status\":\"" + status + "\",\"data\":\"" + data.decode("utf-8") + "\"}")
 
 channel.basic_consume(task_callback, queue="tasks")
-
 
 # LOGOUT CONSUMER
 channel.queue_declare(queue="logout", durable=True)
@@ -145,8 +143,8 @@ def logout_callback(ch, method, properties, body):
 
 channel.basic_consume(logout_callback, queue="logout")
 
-
 # STATUS PUBLISHER
+
 channel.queue_declare(queue="status", durable=True)
 
 channel.start_consuming()

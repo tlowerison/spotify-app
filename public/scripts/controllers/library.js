@@ -1,72 +1,54 @@
 app.controller("Library", function($scope, $http, $location, apiFactory, dataFactory) {
-	$(document).ready(function() {
-		Promise.all(dataFactory.libraryPromises).then(function() {
-			$scope.$apply(function() {
-				$scope.playlists = dataFactory.playlists;
-				$scope.savedAlbums = dataFactory.savedAlbums;
-				$scope.savedTracks = dataFactory.savedTracks;
-				$scope.recentlyPlayed = dataFactory.recentlyPlayed;
-				$scope.libraryUrl = dataFactory.libraryUrl;
-				$scope.analysisPopUp = dataFactory.analysisPopUp;
-			})
-		});
-	});
-
-	$scope.onObjectClick = function(type, id) {
-		if (type == "playlists") {
-			dataFactory.currentObject = {
-				type: "playlist",
-				object: dataFactory[type][id],
-				id: id,
-				promise: dataFactory.overview(type, id)
-			};
-		} else if (type == "savedAlbums") {
-			var dest = dataFactory[type].albums[id];
-			dataFactory.currentObject = {
-				type: "album",
-				object: dest,
-				id: id,
-				promise: dataFactory.getOverview(dest.tracks, dest, false)
-			};
-		} else if (type == "savedTracks") {
-			dataFactory.currentObject = {
-				type: "track",
-				object: dataFactory[type].tracks[id],
-				id: id,
-				promise: new Promise(function(r) {r();})
-			}
-		}
-	}
-
 	$scope.init = function(type) {
-		$scope.onUserModelClick();
-		Promise.all(dataFactory.libraryPromises).then(function() {
-			if (type) dataFactory.overview(type);
-		})
-	}
-
-	$scope.onUserModelClick = function() {
-		if (!dataFactory.userModelLoaded) {
+		$('.spinner').hide();
+		if (dataFactory.libraryPromises == undefined) {
+			$('#library-analysis').hide();
 			$('.spinner').fadeIn();
-			dataFactory.loadFullLibrary()
-			.then(function() {
-				modelStatus("loaded");
+
+			var overviewPromise = dataFactory.loadFullLibrary();
+			overviewPromise.then(function() {
+				$scope.$apply(function() {
+					$scope.analysisPopUp = dataFactory.analysisPopUp;
+					if (type) dataFactory.overview(type);
+				});
+				spinnerClose();
+			});
+			dataFactory.libraryPromises[0].then(function() {
+				$scope.$apply(function() {
+					$scope.playlists = dataFactory.savedPlaylists;
+				});
+			})
+			dataFactory.libraryPromises[1].then(function() {
+				$scope.$apply(function() {
+					$scope.savedAlbums = dataFactory.savedAlbums;
+				});
+			})
+			dataFactory.libraryPromises[2].then(function() {
+				$scope.$apply(function() {
+					$scope.savedTracks = dataFactory.savedTracks;
+				});
+			})
+			dataFactory.libraryPromises[3].then(function() {
+				$scope.$apply(function() {
+					$scope.recentlyPlayed = dataFactory.recentlyPlayed;
+				});
 			})
 		} else {
-			$('#library-analysis').show();
+			$scope.playlists = dataFactory.savedPlaylists;
+			$scope.savedAlbums = dataFactory.savedAlbums;
+			$scope.savedTracks = dataFactory.savedTracks;
+			$scope.recentlyPlayed = dataFactory.recentlyPlayed;
+			$scope.libraryUrl = dataFactory.libraryUrl;
+			$scope.analysisPopUp = dataFactory.analysisPopUp;
+			spinnerClose();
 		}
 	}
 
-	$scope.onUserModelTrainButtonClick = function() {
-		$http.post('/tracks-svm', { method: "train", samples: dataFactory.allFeatureSamples});
-		modelStatus("trained");
-	}
-
-	$scope.onUserModelUnitTestButtonClick = function() {
-		$http.post('/tracks-svm', { method: "unitTest" })
-		.then(function(res) {
-			$('body').append(res.plt);
-		});
+	function spinnerClose() {
+		Promise.all(dataFactory.libraryPromises)
+		.then(function() {
+			modelStatus("loaded");
+		})
 	}
 	
 	function modelStatus(status) {
@@ -78,6 +60,4 @@ app.controller("Library", function($scope, $http, $location, apiFactory, dataFac
 			});
 		}
 	}
-	$('.spinner').hide();
-	$('#library-analysis').hide();
 });
