@@ -570,10 +570,8 @@ app.factory("apiFactory", function($http, logInFactory) {
 
 	return {
 		call: function(endpoint, data) {
-			console.log(endpoint);
 			return endpointPromiseGenerators[endpoint](data)
 			.catch(function(err) {
-				console.log(err);
 				if (err.status == 401) {
 					return logInFactory.refreshLogIn()
 				}
@@ -611,7 +609,7 @@ app.factory("apiFactory", function($http, logInFactory) {
 
 				var labelById = {}
 				for (var i in tracklist)
-					labelById[trackIds[i]] = tracklist[i].name
+					labelById[trackIds[i]] = { title: tracklist[i].name, artists: tracklist[i].artists.map(function(a) {return a.name;}) };
 
 				var promises = [];
 				var i = 0;
@@ -680,12 +678,11 @@ app.factory("apiFactory", function($http, logInFactory) {
 				});
 			});
 		},
-		modelCall: function(method, samples, labels) {
+		modelCall: function(title, method, samples, labels) {
 			var body = {
 				method: method,
 				samples: samples,
-				tmpsId: tmpsId,
-				labels: labels
+				tmpsId: tmpsId
 			}
 
 			$http({
@@ -697,17 +694,25 @@ app.factory("apiFactory", function($http, logInFactory) {
 					"Content-Type": "application/json"
 				}
 			});
-			$.confirm({
-				title: "Analysis",
+			$.alert({
+				title: title + (title == "Library" ? "" : ":") + " Analysis",
 				content: "<div id=\"popup\" style=\"margin-left:auto;margin-right:auto;text-align:center;\"><div class=\"spinner\" style=\"width:100px;height:80px;font-size:15px;overflow-y:hidden;\"><div class=\"rect1 dialog\"></div><div class=\"rect2 dialog\"></div><div class=\"rect3 dialog\"></div><div class=\"rect4 dialog\"></div><div class=\"rect5 dialog\"></div></div></div>",
 				backgroundDismiss: true,
-				columnClass: "col-xs-12 col-md-8 col-md-offset-2"
+				columnClass: "col-xs-12 col-md-8 col-md-offset-2",
+				buttons: {
+					close: {
+						text: "Close",
+						action: function() {
+							return true;
+						}
+					}
+				}
 			});
+
 
 			function poll() {
 				$http.get("/img-status?tmpsId=" + tmpsId)
 				.then(function(res) {
-				console.log("poll status:", res.data.status)
 					if (res.data.status != "loading") {
 						$(".spinner").fadeOut(function() {
 							$("#popup").append("<div id=\"svg-wrapper\"><svg id=\"d3svg\" width=\"400\" height=\"400\" stroke=\"#fff\" stroke-width=\"0.5\"></svg></div>")
@@ -715,26 +720,48 @@ app.factory("apiFactory", function($http, logInFactory) {
 							var width = +svg.attr("width");
 							var height = +svg.attr("height");
 
-							var i0 = d3.interpolateHsvLong(d3.hsv(120, 1, 0.65), d3.hsv(60, 1, 0.90));
-							var i1 = d3.interpolateHsvLong(d3.hsv(60, 1, 0.90), d3.hsv(0, 0, 0.95));
-							var interpolateTerrain = function(t) { return t < 0.5 ? i0(t * 2) : i1((t - 0.5) * 2); };
-							var color = d3.scaleSequential(interpolateTerrain).domain([-1.5, 1.5]);
 							var volcano = {
 								width: 100,
 								height: 100,
 								values: res.data.data.decisionFunction
 							};
 
+							var min = res.data.data.decisionFunction.reduce(function(a, b) {
+								return Math.min(a, b);
+							});
+							var max = res.data.data.decisionFunction.reduce(function(a, b) {
+								return Math.max(a, b);
+							});
+							var intrgb = [
+								d3.interpolateRgb.gamma(2.2)("rgb(49,54,149)", "rgb(69,117,180)"),
+								d3.interpolateRgb.gamma(2.2)("rgb(69,117,180)", "rgb(116,173,209)"),
+								d3.interpolateRgb.gamma(2.2)("rgb(116,173,209)", "rgb(171,217,233)"),
+								d3.interpolateRgb.gamma(2.2)("rgb(171,217,233)", "rgb(224,243,248)"),
+								d3.interpolateRgb.gamma(2.2)("rgb(224,243,248)", "rgb(254,224,144)"),
+								d3.interpolateRgb.gamma(2.2)("rgb(254,224,144)", "rgb(253,174,97)"),
+								d3.interpolateRgb.gamma(2.2)("rgb(253,174,97)", "rgb(244,109,67)"),
+								d3.interpolateRgb.gamma(2.2)("rgb(244,109,67)", "rgb(215,48,39)"),
+								d3.interpolateRgb.gamma(2.2)("rgb(215,48,39)", "rgb(165,0,38)")
+							];
+							var interpolateTerrain = function(t) {
+								t = (t - min) / (max - min);
+								var k = Math.floor(t * intrgb.length);
+								if (k == intrgb.length) k -= 1;
+								return intrgb[k](t * intrgb.length - k);
+							};
+							var color = d3.scaleSequential(interpolateTerrain);
+
 							svg.selectAll("path")
 							.data(d3.contours()
-							.size([volcano.width, volcano.height])
-							.thresholds(d3.range(-30, 15, 0.1))(volcano.values))
+								.size([volcano.width, volcano.height])
+								.thresholds(d3.range(min, max, 0.1))
+							(volcano.values))
 							.enter().append("path")
 							.attr("d", d3.geoPath(d3.geoIdentity().scale(width / volcano.width)))
 							.attr("fill", function(d) { return color(d.value); });
 
 							var data = res.data.data.scatter.map(function(d, i) {
-								return {x: d[0], y: d[1], label: labels[i]};
+								return {x: d[0], y: d[1], title: labels[i].title, artists: labels[i].artists};
 							})
 
 							var xValue = function(d) { return d.x / 3 + 0.5;};
@@ -746,15 +773,17 @@ app.factory("apiFactory", function($http, logInFactory) {
 							var yMap = function(d) { return yScale(yValue(d));};
 
 							var tooltip = d3.select("#svg-wrapper").append("div")
-							.attr("class", "tooltip")
+							.attr("class", "tooltip container")
 							.style("left", (($("#popup").width() - 400) / 2).toString() + "px")
 							.style("width", "400px")
 							.style("top", "0px")
-							.style("opacity", "1")
+							.style("text-align", "center")
+							.style("color", "white")
+							.style("margin-top", "5px")
 
 							// setup fill color
 							var cValue = function(d) { return d.Manufacturer;};
-							var color = d3.scaleOrdinal(d3.schemeCategory10);
+							var dotcolor = d3.scaleOrdinal(d3.schemeCategory10);
 
 							// draw dots
 							svg.selectAll(".dot")
@@ -764,18 +793,13 @@ app.factory("apiFactory", function($http, logInFactory) {
 							.attr("r", 3.5)
 							.attr("cx", xMap)
 							.attr("cy", yMap)
-							.style("fill", function(d) { return color(cValue(d));}) 
+							.style("fill", function(d) { return dotcolor(cValue(d));}) 
 							.on("mouseover", function(d) {
 								tooltip.transition()
 								.duration(200)
 								.style("opacity", .9);
 
-								tooltip.html(d.label)
-								.style("text-align", "center")
-								.style("margin-top", "5px")
-								.style("color", "white")
-								.style("font-size", "120%")
-								.style("font-weight", "500");
+								tooltip.html("<div style=\"display:inline-block;font-size:130%;font-weight:500;\">" + d.title + "&nbsp;•&nbsp;</div><div style=\"display:inline-block;\">" + d.artists.join(", ") + "</div>")
 							})
 							.on("mouseout", function(d) {
 								tooltip.transition()

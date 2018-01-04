@@ -97,7 +97,7 @@ app.factory("dataFactory", function($location, apiFactory, logInFactory) {
 				})
 			});
 		},
-		analysisPopUp: function(type, overview) {
+		analysisPopUp: function(title, type, overview) {
 			function removeFocus() {
 				$('.mdc-button.mdc-button--raised').focus(function() {
 					this.blur();
@@ -120,7 +120,7 @@ app.factory("dataFactory", function($location, apiFactory, logInFactory) {
 						text: 'Train',
 						btnClass: 'btn-blue',
 						action: function() {
-							apiFactory.modelCall('train', samples, labels)
+							apiFactory.modelCall(title, 'train', samples, labels)
 							removeFocus()
 							return true
 						}
@@ -129,7 +129,7 @@ app.factory("dataFactory", function($location, apiFactory, logInFactory) {
 						text: 'Test',
 						btnClass: 'btn-blue',
 						action: function() {
-							apiFactory.modelCall('test', samples, labels)
+							apiFactory.modelCall(title, 'test', samples, labels)
 							removeFocus()
 							return true
 						}

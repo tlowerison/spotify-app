@@ -128,8 +128,7 @@ app.post("/tracks-svm", function(req, res) {
 		req.body.method,
 		tmps[req.body.tmpsId].PCA.name,
 		tmps[req.body.tmpsId].CLF.name,
-		JSON.stringify(req.body.samples),
-		JSON.stringify(req.body.labels)
+		JSON.stringify(req.body.samples)
 	].join("\n");
 
 	tmps[req.body.tmpsId].status = "loading";

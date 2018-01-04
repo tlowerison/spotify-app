@@ -40,7 +40,7 @@ class Model:
 		self.y_pred_test = self.clf.predict(self.X_test)
 		sys.stdout.write("model tested\n")
 
-	def plot(self, method, labels, levels=10):
+	def plot(self, method, levels=10):
 		X = self.X_train if method == "train" else self.X_test
 		Z = self.clf.decision_function(np.c_[self.xx.ravel(), self.yy.ravel()]).reshape(self.xx.shape)
 
@@ -102,14 +102,13 @@ def task_callback(ch, method, properties, body):
 	pcaPath = lines[2]
 	clfPath = lines[3]
 	samples = eval(lines[4])
-	labels = eval(lines[5])
 	model = Model(pcaPath, clfPath)
 	modelStatus = ""
 	modelData = ""
 
 	try:
 		model.methods[modelMethod](samples)
-		model.plot(modelMethod, labels, levels=64)
+		model.plot(modelMethod, levels=64)
 		model.save(savePKL=(modelMethod=="train"))
 		modelStatus = "success"
 		modelData = {"decisionFunction": str(model.decision_function), "scatter": str(model.scatter)} #model.fig_64
