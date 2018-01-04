@@ -192,12 +192,14 @@ open.then(function(conn) {
 			console.log("CONSUMING STATUS");
 
 			if (msg !== null) {
-				var res = JSON.parse(msg.content.toString("utf8"));
-				tmps[res.id].status = res.status;
-				tmps[res.id].data = {
-					decisionFunction: JSON.parse(res.decisionFunction),
-					scatter: JSON.parse(res.scatter)
-				}
+				try {
+					var res = JSON.parse(msg.content.toString("utf8"));
+					tmps[res.id].status = res.status;
+					tmps[res.id].data = {
+						decisionFunction: JSON.parse(res.decisionFunction),
+						scatter: JSON.parse(res.scatter)
+					}
+				} catch(err) { }
 				ch.ack(msg);
 			}
 			console.log("STATUS CONSUMED");
