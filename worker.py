@@ -48,7 +48,7 @@ class Model:
 		contour = plt.contour(self.xx, self.yy, Z, levels=[0], linewidths=2, colors="palevioletred")
 		scatter = plt.scatter(X[:, 0], X[:, 1], c="orange", s=15, edgecolors="black")
 
-		self.decision_function = Z.flatten().tolist()
+		self.decision_function = np.flip(Z, 0).flatten().tolist()
 		self.scatter = X.tolist()
 
 		plt.axis("tight")

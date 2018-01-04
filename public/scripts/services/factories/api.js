@@ -711,14 +711,14 @@ app.factory("apiFactory", function($http, logInFactory) {
 					if (res.data.status != "loading") {
 						$(".spinner").fadeOut(function() {
 							$("#popup").append("<div id=\"svg-wrapper\"><svg id=\"d3svg\" width=\"400\" height=\"400\" stroke=\"#fff\" stroke-width=\"0.5\"></svg></div>")
-							var svg = d3.select("#d3svg"),
-							    width = +svg.attr("width"),
-							    height = +svg.attr("height");
+							var svg = d3.select("#d3svg");
+							var width = +svg.attr("width");
+							var height = +svg.attr("height");
 
-							var i0 = d3.interpolateHsvLong(d3.hsv(120, 1, 0.65), d3.hsv(60, 1, 0.90)),
-							    i1 = d3.interpolateHsvLong(d3.hsv(60, 1, 0.90), d3.hsv(0, 0, 0.95)),
-							    interpolateTerrain = function(t) { return t < 0.5 ? i0(t * 2) : i1((t - 0.5) * 2); },
-							    color = d3.scaleSequential(interpolateTerrain).domain([-1.5, 1.5]);
+							var i0 = d3.interpolateHsvLong(d3.hsv(120, 1, 0.65), d3.hsv(60, 1, 0.90));
+							var i1 = d3.interpolateHsvLong(d3.hsv(60, 1, 0.90), d3.hsv(0, 0, 0.95));
+							var interpolateTerrain = function(t) { return t < 0.5 ? i0(t * 2) : i1((t - 0.5) * 2); };
+							var color = d3.scaleSequential(interpolateTerrain).domain([-1.5, 1.5]);
 							var volcano = {
 								width: 100,
 								height: 100,
@@ -726,39 +726,35 @@ app.factory("apiFactory", function($http, logInFactory) {
 							};
 
 							svg.selectAll("path")
-							    .data(d3.contours()
-							        .size([volcano.width, volcano.height])
-							        .thresholds(d3.range(-15, 15, 0.1))
-							      (volcano.values))
-							    .enter().append("path")
-							      .attr("d", d3.geoPath(d3.geoIdentity().scale(width / volcano.width)))
-							      .attr("fill", function(d) { return color(d.value); });
+							.data(d3.contours()
+							.size([volcano.width, volcano.height])
+							.thresholds(d3.range(-15, 15, 0.1))(volcano.values))
+							.enter().append("path")
+							.attr("d", d3.geoPath(d3.geoIdentity().scale(width / volcano.width)))
+							.attr("fill", function(d) { return color(d.value); });
 
 							var data = res.data.data.scatter.map(function(d, i) {
 								return {x: d[0], y: d[1], label: labels[i]};
 							})
 
-							// setup x 
-							var xValue = function(d) { return d.x / 3 + 0.5;}, // data -> value
-							    xScale = d3.scaleLinear().range([0, width]), // value -> display
-							    xMap = function(d) { return xScale(xValue(d));}; // data -> display
+							var xValue = function(d) { return d.x / 3 + 0.5;};
+							var xScale = d3.scaleLinear().range([0, width]);
+							var xMap = function(d) { return xScale(xValue(d));};
 
-							// setup y
-							var yValue = function(d) { return -d.y / 3 + 0.5;}, // data -> value
-							    yScale = d3.scaleLinear().range([height, 0]), // value -> display
-							    yMap = function(d) { return yScale(yValue(d));}; // data -> display
+							var yValue = function(d) { return d.y / 3 + 0.5;};
+							var yScale = d3.scaleLinear().range([height, 0]);
+							var yMap = function(d) { return yScale(yValue(d));};
 
-							// add the tooltip area to the webpage
 							var tooltip = d3.select("#svg-wrapper").append("div")
-							    .attr("class", "tooltip")
-							    .style("left", (($("#popup").width() - 400) / 2).toString() + "px")
-							    .style("width", "400px")
-								.style("top", "0px")
-								.style("opacity", "1")
+							.attr("class", "tooltip")
+							.style("left", (($("#popup").width() - 400) / 2).toString() + "px")
+							.style("width", "400px")
+							.style("top", "0px")
+							.style("opacity", "1")
 
 							// setup fill color
-							var cValue = function(d) { return d.Manufacturer;},
-							    color = d3.scaleOrdinal(d3.schemeCategory10);
+							var cValue = function(d) { return d.Manufacturer;};
+							var color = d3.scaleOrdinal(d3.schemeCategory10);
 
 							// draw dots
 							svg.selectAll(".dot")
@@ -773,12 +769,13 @@ app.factory("apiFactory", function($http, logInFactory) {
 								tooltip.transition()
 								.duration(200)
 								.style("opacity", .9);
+
 								tooltip.html(d.label)
 								.style("text-align", "center")
 								.style("margin-top", "5px")
 								.style("color", "white")
 								.style("font-size", "120%")
-								.style("font-weight", "500")
+								.style("font-weight", "500");
 							})
 							.on("mouseout", function(d) {
 								tooltip.transition()
@@ -786,9 +783,8 @@ app.factory("apiFactory", function($http, logInFactory) {
 								.style("opacity", 0);
 							});
 						})
-					} else {
+					} else
 						setTimeout(poll, 500);
-					}
 				})
 			}
 			setTimeout(poll, 500)
