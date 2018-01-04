@@ -64,9 +64,6 @@ class Model:
 			text.set_color("white")
 			sys.stdout.write("model plotted\n")
 
-		tooltip = mpld3.plugins.PointLabelTooltip(scatter, labels=labels)
-		mpld3.plugins.connect(plt.gcf(), tooltip)
-
 	def show(self):
 		plt.show()
 
@@ -79,8 +76,6 @@ class Model:
 			plt.savefig(my_stringIObytes, bbox_inches="tight")
 			my_stringIObytes.seek(0)
 			self.fig_64 = base64.b64encode(my_stringIObytes.read())
-		if saveHTML:
-			self.fig_d3_html = mpld3.fig_to_html(plt.gcf())
 		sys.stdout.write("model saved\n")
 
 	def close(self):
@@ -122,7 +117,7 @@ def task_callback(ch, method, properties, body):
 		sys.stdout.write("Model Error!\n")
 		sys.stdout.write(repr(err) + "\n")
 		modelStatus = "error"
-		modelData = ""
+		modelData = {}
 
 	model.close()
 	task_callback_prologue(ch, method, modelId, modelStatus, modelData)	
