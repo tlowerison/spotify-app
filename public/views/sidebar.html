@@ -1,6 +1,7 @@
 <div id="sidebar-wrapper" ng-controller="Sidebar">
 	<ul class="sidebar-nav">
-		<li class="sidebar-brand"><a href="/">Noisify</a></li>
+		<li class="sidebar-brand"><a href="/">Home</a></li>
+		<li id="sidebar-search"><a href="/search">Search</a></li>
 		<li id="sidebar-browse"><a href="/browse">Browse</a></li>
 		<li id="sidebar-library">
 			<a href="#" class="active subtitle" data-toggle="collapse" data-target="#library">Your Music</a>
@@ -19,7 +20,6 @@
 				</li>
 			</ul>
 		</li>
-		<li id="sidebar-search"><a href="/search">Search</a></li>
 		<li id="sidebar-login"><a href="/login" target="_self">Login</a></li>
 		<li id="sidebar-logout"><a href="#" ng-click="loggedOutSidebar()">Logout</a></li>
 	</ul>
