@@ -728,7 +728,7 @@ app.factory("apiFactory", function($http, logInFactory) {
 							svg.selectAll("path")
 							.data(d3.contours()
 							.size([volcano.width, volcano.height])
-							.thresholds(d3.range(-15, 15, 0.1))(volcano.values))
+							.thresholds(d3.range(-30, 15, 0.1))(volcano.values))
 							.enter().append("path")
 							.attr("d", d3.geoPath(d3.geoIdentity().scale(width / volcano.width)))
 							.attr("fill", function(d) { return color(d.value); });
