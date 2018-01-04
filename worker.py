@@ -9,7 +9,6 @@ from sklearn.decomposition import PCA
 from sklearn.externals import joblib
 from os.path import join, dirname
 from dotenv import load_dotenv
-import mpld3
 
 # SVM MODEL
 class Model:
