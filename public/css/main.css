@@ -1,3 +1,16 @@
+
+.dot {
+  stroke: #000;
+}
+
+.tooltip {
+  position: absolute;
+  height: 28px;
+  pointer-events: none;
+}
+
+
+
 /* --- HTML Elements --- */
 
 a {

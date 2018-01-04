@@ -12,7 +12,7 @@ app.factory("logInFactory", function($location, $window, $http, localStorageServ
 						tmpsId = localStorageService.get("tmpsId")
 					}
 
-					if (tokensInitialized && spotifyHeaders != null && refresh_token != null && tmpsId != null) {
+					if (spotifyHeaders != null && refresh_token != null && tmpsId != null) {
 						resolve();
 					} else {
 						reject();

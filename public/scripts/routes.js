@@ -71,7 +71,6 @@ function initializeSpotifyTokens(tokens, localStorageService) {
 	localStorageService.set("spotifyHeaders", spotifyHeaders)
 	localStorageService.set("refresh_token", refresh_token)
 	localStorageService.set("tmpsId", tmpsId)
-	tokensInitialized = true;
 }
 
 function refreshSpotifyTokens(tokens, localStorageService) {
@@ -102,4 +101,3 @@ var spotifyUrl = 'https://api.spotify.com/v1';
 var spotifyHeaders = null;
 var refresh_token = null;
 var tmpsId = null;
-var tokensInitialized = false;

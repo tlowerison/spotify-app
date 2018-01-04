@@ -128,7 +128,8 @@ app.post("/tracks-svm", function(req, res) {
 		req.body.method,
 		tmps[req.body.tmpsId].PCA.name,
 		tmps[req.body.tmpsId].CLF.name,
-		JSON.stringify(req.body.samples)
+		JSON.stringify(req.body.samples),
+		JSON.stringify(req.body.labels)
 	].join("\n");
 
 	tmps[req.body.tmpsId].status = "loading";
@@ -188,13 +189,18 @@ open.then(function(conn) {
 		ch.assertQueue("status");
 
 		ch.consume("status", function(msg) {
+			console.log("CONSUMING STATUS");
+
 			if (msg !== null) {
-				console.log("CONSUMING STATUS");
 				var res = JSON.parse(msg.content.toString("utf8"));
 				tmps[res.id].status = res.status;
-				tmps[res.id].data = res.data;
+				tmps[res.id].data = {
+					decisionFunction: JSON.parse(res.decisionFunction),
+					scatter: JSON.parse(res.scatter)
+				}
 				ch.ack(msg);
 			}
+			console.log("STATUS CONSUMED");
 		});
 	});
 	return ok;

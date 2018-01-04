@@ -5,6 +5,7 @@ app.factory("dataFactory", function($location, apiFactory, logInFactory) {
 		savedTracks: {},
 		recentlyPlayed: [],
 		allFeatureSamples: [],
+		allFeatureLabels: [],
 		currentObject: {},
 		searchResults: {
 			"tracks": [],
@@ -96,25 +97,30 @@ app.factory("dataFactory", function($location, apiFactory, logInFactory) {
 				})
 			});
 		},
-		analysisPopUp: function(type, samples, scope) {
+		analysisPopUp: function(type, overview) {
 			function removeFocus() {
 				$('.mdc-button.mdc-button--raised').focus(function() {
 					this.blur();
 				});
 			}
-			if (type == "library")
+			var samples = null, labels = null;
+			if (type == "library") {
 				samples = service.allFeatureSamples
+				labels = service.allFeatureLabels
+			} else {
+				samples = overview.samples
+				labels = overview.labels
+			}
 			
 			$.confirm({
 				title: 'Analysis',
 				content: 'Should' + (type == library ? ' your ' : ' this ') + type + ' be used to train or test the model of your musical preferences?',
-				scope: scope,
 				buttons: {
 					train: {
 						text: 'Train',
 						btnClass: 'btn-blue',
 						action: function() {
-							apiFactory.modelCall('train', samples)
+							apiFactory.modelCall('train', samples, labels)
 							removeFocus()
 							return true
 						}
@@ -123,7 +129,7 @@ app.factory("dataFactory", function($location, apiFactory, logInFactory) {
 						text: 'Test',
 						btnClass: 'btn-blue',
 						action: function() {
-							apiFactory.modelCall('test', samples)
+							apiFactory.modelCall('test', samples, labels)
 							removeFocus()
 							return true
 						}
@@ -242,9 +248,10 @@ app.factory("dataFactory", function($location, apiFactory, logInFactory) {
 					.then(function(res) {
 						dest.overview = {
 							samples: res.samples,
-							avgSample: res.avgSample
+							avgSample: res.avgSample,
+							labels: res.labels
 						};
-						if (append) appendToAllFeatureSamples(res.samples);
+						if (append)	appendToAll(res.samples, res.labels);
 						resolve();
 					});
 				}));
@@ -302,22 +309,10 @@ app.factory("dataFactory", function($location, apiFactory, logInFactory) {
 		return blockPromises;
 	}
 
-	function appendToAllFeatureSamples(arr) {
-		if (arr == undefined) return;
-		service.allFeatureSamples = service.allFeatureSamples.concat(arr);
-	}
-
-	function updateArtistCount(tracklist) {
-		for (var i in tracklist) {
-			var track = tracklist[i];
-			for (var j in track.artists) {
-				var artist = track.artists[j].name;
-				if (artist in artistCounts)
-					artistCounts[artist] += 1;
-				else
-					artistCounts[artist] = 1;
-			}
-		}
+	function appendToAll(samples, labels) {
+		if (samples == undefined || labels == undefined) return;
+		service.allFeatureSamples = service.allFeatureSamples.concat(samples);
+		service.allFeatureLabels = service.allFeatureLabels.concat(labels);
 	}
 
 	service["getOverview"] = getOverview;

@@ -609,6 +609,10 @@ app.factory("apiFactory", function($http, logInFactory) {
 						return t.track_id;
 				});
 
+				var labelById = {}
+				for (var i in tracklist)
+					labelById[trackIds[i]] = tracklist[i].name
+
 				var promises = [];
 				var i = 0;
 				while (i < trackIds.length) {
@@ -632,10 +636,12 @@ app.factory("apiFactory", function($http, logInFactory) {
 							continue;
 						}
 					}
+					var labels = [];
 
 					clean(fullFeatureSamples, undefined);
 					for (var i in fullFeatureSamples) {
 						var track = fullFeatureSamples[i];
+						labels.push(labelById[track.id]);
 						for (var j in removedFeatures) {
 							var key = removedFeatures[j];
 							delete track[key];
@@ -668,16 +674,18 @@ app.factory("apiFactory", function($http, logInFactory) {
 
 					RESOLVE({
 						samples: samples,
-						avgSample: avgSample
+						avgSample: avgSample,
+						labels: labels
 					});
 				});
 			});
 		},
-		modelCall: function(method, samples) {
+		modelCall: function(method, samples, labels) {
 			var body = {
 				method: method,
 				samples: samples,
-				tmpsId: tmpsId
+				tmpsId: tmpsId,
+				labels: labels
 			}
 
 			$http({
@@ -691,17 +699,92 @@ app.factory("apiFactory", function($http, logInFactory) {
 			});
 			$.confirm({
 				title: "Analysis",
-				content: "<div style=\"margin-left:auto;margin-right:auto;text-align:center;\"><div class=\"spinner\" style=\"width:100px;height:80px;font-size:15px\"><div class=\"rect1 dialog\"></div><div class=\"rect2 dialog\"></div><div class=\"rect3 dialog\"></div><div class=\"rect4 dialog\"></div><div class=\"rect5 dialog\"></div></div><img id=\"pic\"></div>",
+				content: "<div id=\"popup\" style=\"margin-left:auto;margin-right:auto;text-align:center;\"><div class=\"spinner\" style=\"width:100px;height:80px;font-size:15px;overflow-y:hidden;\"><div class=\"rect1 dialog\"></div><div class=\"rect2 dialog\"></div><div class=\"rect3 dialog\"></div><div class=\"rect4 dialog\"></div><div class=\"rect5 dialog\"></div></div></div>",
 				backgroundDismiss: true,
 				columnClass: "col-xs-12 col-md-8 col-md-offset-2"
 			});
+
 			function poll() {
 				$http.get("/img-status?tmpsId=" + tmpsId)
 				.then(function(res) {
 				console.log("poll status:", res.data.status)
 					if (res.data.status != "loading") {
 						$(".spinner").fadeOut(function() {
-							$("#pic").attr("src", "data:img/png;base64," + res.data.data);
+							$("#popup").append("<div id=\"svg-wrapper\"><svg id=\"d3svg\" width=\"400\" height=\"400\" stroke=\"#fff\" stroke-width=\"0.5\"></svg></div>")
+							var svg = d3.select("#d3svg"),
+							    width = +svg.attr("width"),
+							    height = +svg.attr("height");
+
+							var i0 = d3.interpolateHsvLong(d3.hsv(120, 1, 0.65), d3.hsv(60, 1, 0.90)),
+							    i1 = d3.interpolateHsvLong(d3.hsv(60, 1, 0.90), d3.hsv(0, 0, 0.95)),
+							    interpolateTerrain = function(t) { return t < 0.5 ? i0(t * 2) : i1((t - 0.5) * 2); },
+							    color = d3.scaleSequential(interpolateTerrain).domain([-1.5, 1.5]);
+							var volcano = {
+								width: 100,
+								height: 100,
+								values: res.data.data.decisionFunction
+							};
+
+							svg.selectAll("path")
+							    .data(d3.contours()
+							        .size([volcano.width, volcano.height])
+							        .thresholds(d3.range(-15, 15, 0.1))
+							      (volcano.values))
+							    .enter().append("path")
+							      .attr("d", d3.geoPath(d3.geoIdentity().scale(width / volcano.width)))
+							      .attr("fill", function(d) { return color(d.value); });
+
+							var data = res.data.data.scatter.map(function(d, i) {
+								return {x: d[0], y: d[1], label: labels[i]};
+							})
+
+							// setup x 
+							var xValue = function(d) { return d.x / 3 + 0.5;}, // data -> value
+							    xScale = d3.scaleLinear().range([0, width]), // value -> display
+							    xMap = function(d) { return xScale(xValue(d));}; // data -> display
+
+							// setup y
+							var yValue = function(d) { return -d.y / 3 + 0.5;}, // data -> value
+							    yScale = d3.scaleLinear().range([height, 0]), // value -> display
+							    yMap = function(d) { return yScale(yValue(d));}; // data -> display
+
+							// add the tooltip area to the webpage
+							var tooltip = d3.select("#svg-wrapper").append("div")
+							    .attr("class", "tooltip")
+							    .style("left", (($("#popup").width() - 400) / 2).toString() + "px")
+							    .style("width", "400px")
+								.style("top", "0px")
+								.style("opacity", "1")
+
+							// setup fill color
+							var cValue = function(d) { return d.Manufacturer;},
+							    color = d3.scaleOrdinal(d3.schemeCategory10);
+
+							// draw dots
+							svg.selectAll(".dot")
+							.data(data)
+							.enter().append("circle")
+							.attr("class", "dot")
+							.attr("r", 3.5)
+							.attr("cx", xMap)
+							.attr("cy", yMap)
+							.style("fill", function(d) { return color(cValue(d));}) 
+							.on("mouseover", function(d) {
+								tooltip.transition()
+								.duration(200)
+								.style("opacity", .9);
+								tooltip.html(d.label)
+								.style("text-align", "center")
+								.style("margin-top", "5px")
+								.style("color", "white")
+								.style("font-size", "120%")
+								.style("font-weight", "500")
+							})
+							.on("mouseout", function(d) {
+								tooltip.transition()
+								.duration(500)
+								.style("opacity", 0);
+							});
 						})
 					} else {
 						setTimeout(poll, 500);
@@ -887,17 +970,13 @@ var removedFeatures = [
 	"type",
 	"uri"
 ];
-
-
-var dBNorm = -60;
+var dBNorm = -10;
 var bpmNorm = 180;
 var timeSignatureNorm = 4;
-//var popularityNorm = 100;
 var scaleTrack = function(x) {
 	x[2] /= dBNorm;
 	x[8] /= bpmNorm;
 	x[9] /= timeSignatureNorm;
-	//x[10] /= popularityNorm;
 };
 var clean = function(arr, deleteValue) {
 	for (var i = 0; i < arr.length; i++) {
