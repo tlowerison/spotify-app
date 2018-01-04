@@ -24,7 +24,7 @@ app.controller("Sidebar", function($scope, $http, $location, $routeParams, logIn
 			access_token: url[2],
 			refresh_token: url[3]
 		}, localStorageService)
-		$location.path("/");
+		$location.path("/browse");
 	}
 
 	logInFactory.isLoggedIn()
