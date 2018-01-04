@@ -18,6 +18,7 @@ dotenv.load();
 var client_id = process.env.CLIENT_ID;
 var client_secret = process.env.CLIENT_SECRET;
 var redirect_uri = process.env.REDIRECT_URI;
+var port = process.env.PORT || "8000";
 var scope = "playlist-read-private playlist-read-collaborative playlist-modify-public playlist-modify-private user-library-read user-library-modify user-read-private user-read-email user-read-birthdate user-follow-read user-follow-modify user-top-read user-read-playback-state user-read-recently-played user-read-currently-playing user-modify-playback-state";
 var stateKey = "spotify_auth_state";
 var tmps = {};
@@ -215,6 +216,7 @@ app.get("/img-status", function(req, res) {
 	});
 });
 
-console.log(process.env.PORT)
-
-app.listen(process.env.PORT);
+app.listen(port, function(err) {
+	if (err) console.log(err);
+	else console.log("Listening on port " + port);
+});
