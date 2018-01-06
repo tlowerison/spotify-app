@@ -1006,6 +1006,7 @@ function init(popup, s, l, d) {
 	$("#feature-1, #feature-2").change(function() {
 		analysisPlot("feature");
 	})
+	currentPlotType = "cluster";
 }
 
 function mouseOverDot(d) {
