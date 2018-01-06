@@ -669,7 +669,6 @@ app.factory("apiFactory", function($http, logInFactory) {
 						}
 					}
 					scaleSpotifyFeaturesData(samples);
-
 					RESOLVE({
 						samples: samples,
 						avgSample: avgSample,
@@ -694,9 +693,59 @@ app.factory("apiFactory", function($http, logInFactory) {
 					"Content-Type": "application/json"
 				}
 			});
+
+			var title = ''
+			+ '<div style="display:inline-block;">' + title + (title == 'Library' ? '' : ':') + ' Analysis' + '</div>'
+			+ '<button class="mdc-button collapsed" style="display:inline-block; margin-left:3px;padding:0px;" onclick="analysisOptions()">'
+				+ '<h3 style="margin:0px; padding-left:3px; padding-right:3px;">•••</h3>'
+			+ '</button>';
+
+			function poll() {
+				$http.get("/img-status?tmpsId=" + tmpsId)
+				.then(function(res) {
+					if (res.data.status != "loading") {
+						$(".spinner").fadeOut(function() {
+							init($("#analysis-popup"), samples, labels, res.data.data);
+							generateClusterAnalysis();
+						});
+					} else setTimeout(poll, 500);
+				})
+			}
+
+			setTimeout(poll, 500);
+
+
 			$.alert({
-				title: title + (title == "Library" ? "" : ":") + " Analysis",
-				content: "<div id=\"popup\" style=\"margin-left:auto;margin-right:auto;text-align:center;\"><div class=\"spinner\" style=\"width:100px;height:80px;font-size:15px;overflow-y:hidden;\"><div class=\"rect1 dialog\"></div><div class=\"rect2 dialog\"></div><div class=\"rect3 dialog\"></div><div class=\"rect4 dialog\"></div><div class=\"rect5 dialog\"></div></div></div>",
+				title: title,
+				content: ''
+				+ '<div id="analysis-popup" style="margin-left:auto; margin-right:auto; text-align:center;">'
+					+ '<div id="feature-analysis-select" class="collapse section" style="top:-5px;">'
+						+ '<select id="feature-1" style="display:inline-block;">'
+							+ '<option value="-1"></option><option value="0">Danceability</option>'
+							+ '<option value="1">Energy</option><option value="2">Loudness</option>'
+							+ '<option value="3">Speechiness</option><option value="4">Acousticness</option>'
+							+ '<option value="5">Instrumentalness</option><option value="6">Liveness</option>'
+							+ '<option value="7">Valence</option><option value="8">Tempo</option>'
+							+ '<option value="9">Time Signature</option>'
+						+ '</select>'
+						+ '<h5 style="display:inline-block; margin-left:3px; margin-right:3px;">vs.</h5>'
+						+ '<select id="feature-2" style="display:inline-block;">'
+							+ '<option value="-1"></option><option value="0">Danceability</option>'
+							+ '<option value="1">Energy</option><option value="2">Loudness</option>'
+							+ '<option value="3">Speechiness</option><option value="4">Acousticness</option>'
+							+ '<option value="5">Instrumentalness</option><option value="6">Liveness</option>'
+							+ '<option value="7">Valence</option><option value="8">Tempo</option>'
+							+ '<option value="9">Time Signature</option>'
+						+ '</select>'
+					+ '</div>'
+					+ '<div class="spinner" style="width:100px; height:80px; font-size:15px; overflow-y:hidden;">'
+						+ '<div class="rect1 dialog"></div>'
+						+ '<div class="rect2 dialog"></div>'
+						+ '<div class="rect3 dialog"></div>'
+						+ '<div class="rect4 dialog"></div>'
+						+ '<div class="rect5 dialog"></div>'
+					+ '</div>'
+				+ '</div>',
 				backgroundDismiss: true,
 				columnClass: "col-xs-12 col-md-8 col-md-offset-2",
 				buttons: {
@@ -709,109 +758,6 @@ app.factory("apiFactory", function($http, logInFactory) {
 				}
 			});
 
-
-			function poll() {
-				$http.get("/img-status?tmpsId=" + tmpsId)
-				.then(function(res) {
-					if (res.data.status != "loading") {
-						$(".spinner").fadeOut(function() {
-							$("#popup").append("<div id=\"svg-wrapper\"><svg id=\"d3svg\" width=\"400\" height=\"400\" stroke=\"#fff\" stroke-width=\"0.5\"></svg></div>")
-							var svg = d3.select("#d3svg");
-							var width = +svg.attr("width");
-							var height = +svg.attr("height");
-
-							var volcano = {
-								width: 100,
-								height: 100,
-								values: res.data.data.decisionFunction
-							};
-
-							var min = res.data.data.decisionFunction.reduce(function(a, b) {
-								return Math.min(a, b);
-							});
-							var max = res.data.data.decisionFunction.reduce(function(a, b) {
-								return Math.max(a, b);
-							});
-							var intrgb = [
-								d3.interpolateRgb.gamma(2.2)("rgb(49,54,149)", "rgb(69,117,180)"),
-								d3.interpolateRgb.gamma(2.2)("rgb(69,117,180)", "rgb(116,173,209)"),
-								d3.interpolateRgb.gamma(2.2)("rgb(116,173,209)", "rgb(171,217,233)"),
-								d3.interpolateRgb.gamma(2.2)("rgb(171,217,233)", "rgb(224,243,248)"),
-								d3.interpolateRgb.gamma(2.2)("rgb(224,243,248)", "rgb(254,224,144)"),
-								d3.interpolateRgb.gamma(2.2)("rgb(254,224,144)", "rgb(253,174,97)"),
-								d3.interpolateRgb.gamma(2.2)("rgb(253,174,97)", "rgb(244,109,67)"),
-								d3.interpolateRgb.gamma(2.2)("rgb(244,109,67)", "rgb(215,48,39)"),
-								d3.interpolateRgb.gamma(2.2)("rgb(215,48,39)", "rgb(165,0,38)")
-							];
-							var interpolateTerrain = function(t) {
-								t = (t - min) / (max - min);
-								var k = Math.floor(t * intrgb.length);
-								if (k == intrgb.length) k -= 1;
-								return intrgb[k](t * intrgb.length - k);
-							};
-							var color = d3.scaleSequential(interpolateTerrain);
-
-							svg.selectAll("path")
-							.data(d3.contours()
-								.size([volcano.width, volcano.height])
-								.thresholds(d3.range(min, max, 0.1))
-							(volcano.values))
-							.enter().append("path")
-							.attr("d", d3.geoPath(d3.geoIdentity().scale(width / volcano.width)))
-							.attr("fill", function(d) { return color(d.value); });
-
-							var data = res.data.data.scatter.map(function(d, i) {
-								return {x: d[0], y: d[1], title: labels[i].title, artists: labels[i].artists};
-							})
-
-							var xValue = function(d) { return d.x / 3 + 0.5;};
-							var xScale = d3.scaleLinear().range([0, width]);
-							var xMap = function(d) { return xScale(xValue(d));};
-
-							var yValue = function(d) { return d.y / 3 + 0.5;};
-							var yScale = d3.scaleLinear().range([height, 0]);
-							var yMap = function(d) { return yScale(yValue(d));};
-
-							var tooltip = d3.select("#svg-wrapper").append("div")
-							.attr("class", "tooltip container")
-							.style("left", (($("#popup").width() - 400) / 2).toString() + "px")
-							.style("width", "400px")
-							.style("top", "0px")
-							.style("text-align", "center")
-							.style("color", "white")
-							.style("margin-top", "5px")
-
-							// setup fill color
-							var cValue = function(d) { return d.Manufacturer;};
-							var dotcolor = d3.scaleOrdinal(d3.schemeCategory10);
-
-							// draw dots
-							svg.selectAll(".dot")
-							.data(data)
-							.enter().append("circle")
-							.attr("class", "dot")
-							.attr("r", 3.5)
-							.attr("cx", xMap)
-							.attr("cy", yMap)
-							.style("fill", function(d) { return dotcolor(cValue(d));}) 
-							.on("mouseover", function(d) {
-								tooltip.transition()
-								.duration(200)
-								.style("opacity", .9);
-
-								tooltip.html("<div style=\"display:inline-block;font-size:130%;font-weight:500;\">" + d.title + "&nbsp;•&nbsp;</div><div style=\"display:inline-block;\">" + d.artists.join(", ") + "</div>")
-							})
-							.on("mouseout", function(d) {
-								tooltip.transition()
-								.duration(500)
-								.style("opacity", 0);
-							});
-						})
-					} else
-						setTimeout(poll, 500);
-				})
-			}
-			setTimeout(poll, 500)
 		}
 	};
 });
@@ -990,13 +936,23 @@ var removedFeatures = [
 	"type",
 	"uri"
 ];
-var dBNorm = -10;
-var bpmNorm = 180;
-var timeSignatureNorm = 4;
+
+var featureNorms = [
+	1,	// Danceability
+	1,	// Energy
+	10, // Loudness: Arbitrary choice, but most songs don't display loudness below -10dB
+	1,	// Speechiness
+	1,	// Acousticness
+	1,  // Instrumentalness
+	1,  // Liveness
+	1,  // Valence
+	180,// Tempo: Arbitrary choice, but most songs don't display tempo above 180BPM
+	4	// Time Signature
+];
 var scaleTrack = function(x) {
-	x[2] /= dBNorm;
-	x[8] /= bpmNorm;
-	x[9] /= timeSignatureNorm;
+	x[2] /= featureNorms[2];
+	x[8] /= featureNorms[8];
+	x[9] /= featureNorms[9];
 };
 var clean = function(arr, deleteValue) {
 	for (var i = 0; i < arr.length; i++) {
@@ -1007,3 +963,205 @@ var clean = function(arr, deleteValue) {
 	}
 	return arr;
 };
+
+
+var features = null,
+	tooltip = null,
+	svg = null,
+	width = null,
+	height = null,
+	previousPlotType = null,
+	currentPlotType = null,
+	data = {
+		scatter: null,
+		decisionFunction: null
+	};
+
+function init(popup, s, l, d) {
+	labels = l;
+	// transpose samples matrix to a features matrix
+	features = s[0].map((col, i) => s.map(row => row[i]))
+
+	// provide all data with position title and artist information
+	data.scatter = d.scatter.map(function(e, i) {
+		return {x: e[0], y: e[1], title: labels[i].title, artists: labels[i].artists};
+	});
+	data.decisionFunction = d.decisionFunction;
+
+	popup.append("<div id=\"svg-wrapper\"><svg id=\"d3svg\" width=\"400\" height=\"400\" stroke=\"#fff\" stroke-width=\"0.5\"></svg></div>");
+	
+	svg = d3.select("#d3svg");
+	width = +svg.attr("width");
+	height = +svg.attr("height");
+
+	tooltip = d3.select("#svg-wrapper").append("div")
+	.attr("class", "tooltip container")
+	.style("left", ((popup.width() - 400) / 2).toString() + "px")
+	.style("width", "400px")
+	.style("bottom", "375px")
+	.style("text-align", "center")
+	.style("color", "white")
+	.style("margin-top", "5px");
+
+	$("#feature-1, #feature-2").change(function() {
+		analysisPlot("feature");
+	})
+}
+
+function mouseOverDot(d) {
+	tooltip.transition()
+	.duration(200)
+	.style("opacity", .9);
+	tooltip.html("<div style=\"display:inline-block;font-size:130%;font-weight:500;\">" + d.title + "&nbsp;•&nbsp;</div><div style=\"display:inline-block;\">" + d.artists.join(", ") + "</div>")
+	if (currentPlotType == "feature") tooltip.style("color", "black")
+	else tooltip.style("color", "white")
+}
+
+function mouseOutDot(d) {
+	tooltip.transition()
+	.duration(500)
+	.style("opacity", 0);
+}
+
+function generateClusterAnalysis() {
+	var volcano = {
+		width: 100,
+		height: 100,
+		values: data.decisionFunction
+	};
+
+	var min = data.decisionFunction.reduce(function(a, b) { return Math.min(a, b); });
+	var max = data.decisionFunction.reduce(function(a, b) { return Math.max(a, b); });
+	
+	var colorPallete = [
+		d3.interpolateRgb.gamma(2.2)("rgb(49,54,149)", "rgb(69,117,180)"),
+		d3.interpolateRgb.gamma(2.2)("rgb(69,117,180)", "rgb(116,173,209)"),
+		d3.interpolateRgb.gamma(2.2)("rgb(116,173,209)", "rgb(171,217,233)"),
+		d3.interpolateRgb.gamma(2.2)("rgb(171,217,233)", "rgb(224,243,248)"),
+		d3.interpolateRgb.gamma(2.2)("rgb(224,243,248)", "rgb(254,224,144)"),
+		d3.interpolateRgb.gamma(2.2)("rgb(254,224,144)", "rgb(253,174,97)"),
+		d3.interpolateRgb.gamma(2.2)("rgb(253,174,97)", "rgb(244,109,67)"),
+		d3.interpolateRgb.gamma(2.2)("rgb(244,109,67)", "rgb(215,48,39)"),
+		d3.interpolateRgb.gamma(2.2)("rgb(215,48,39)", "rgb(165,0,38)")
+	];
+
+	var color = d3.scaleSequential(function(t) {
+		t = (t - min) / (max - min);
+		var k = Math.floor(t * colorPallete.length);
+		if (k == colorPallete.length) k -= 1;
+		return colorPallete[k](t * colorPallete.length - k);
+	});
+
+	svg.selectAll("path")
+	.data(d3.contours()
+		.size([volcano.width, volcano.height])
+		.thresholds(d3.range(min, max, 0.1))
+	(volcano.values))
+	.enter().append("path")
+	.attr("d", d3.geoPath(d3.geoIdentity().scale(width / volcano.width)))
+	.attr("fill", function(d) { return color(d.value); });
+
+	// map data to display
+	var xValue = function(d) { return d.x / 3 + 0.5;};
+	var xScale = d3.scaleLinear().range([0, width]);
+	var xMap = function(d) { return xScale(xValue(d));};
+
+	var yValue = function(d) { return d.y / 3 + 0.5;};
+	var yScale = d3.scaleLinear().range([height, 0]);
+	var yMap = function(d) { return yScale(yValue(d));};
+
+	// setup fill color
+	var cValue = function(d) { return d.Manufacturer;};
+	var dotcolor = d3.scaleOrdinal(d3.schemeCategory10);
+
+	// draw dots
+	svg.selectAll(".dot")
+	.data(data.scatter)
+	.enter().append("circle")
+	.attr("class", "dot")
+	.attr("r", 3.5)
+	.attr("cx", xMap)
+	.attr("cy", yMap)
+	.style("fill", function(d) { return dotcolor(cValue(d));}) 
+	.on("mouseover", mouseOverDot)
+	.on("mouseout", mouseOutDot);
+}
+
+function generateFeatureAnalysis(feature1, feature2) {
+	// map data to display
+	var xValue = function(d) { return d.x; };
+	var xScale = d3.scaleLinear().range([0, width]);
+	var xMap = function(d) { return xScale(xValue(d));};
+
+	var yValue = function(d) { return d.y; };
+	var yScale = d3.scaleLinear().range([height, 0]);
+	var yMap = function(d) { return yScale(yValue(d));};
+
+	// setup fill color
+	var cValue = function(d) { return d.Manufacturer;};
+	var dotcolor = d3.scaleOrdinal(d3.schemeCategory10);
+	var scatter = d3.zip(features[feature1], features[feature2])
+	.map(function(d, i) {
+		return {x: d[0], y: d[1], title: labels[i].title, artists: labels[i].artists};
+	});
+
+	// draw dots
+	svg.selectAll(".dot")
+	.data(scatter)
+	.enter().append("circle")
+	.attr("class", "dot")
+	.attr("r", 3.5)
+	.attr("cx", xMap)
+	.attr("cy", yMap)
+	.style("fill", function(d) { return dotcolor(cValue(d));}) 
+	.on("mouseover", mouseOverDot)
+	.on("mouseout", mouseOutDot);
+}
+
+function clearPlot() {
+	svg.selectAll("*").remove();
+}
+
+function analysisPlot() {
+	feature1 = $("#feature-1")[0].value;
+	feature2 = $("#feature-2")[0].value;
+	if (currentPlotType == "cluster" && previousPlotType == "feature" || currentPlotType == "feature") 
+		clearPlot();
+	if (currentPlotType == "cluster") generateClusterAnalysis();
+	else if (feature1 >= 0 && feature2 >= 0) generateFeatureAnalysis(feature1, feature2)
+	previousPlotType = currentPlotType;
+};
+
+function setCurrentType(type) {
+	currentPlotType = type;
+}
+
+function analysisOptions() {
+	$.alert({
+		title: "Options",
+		content: "What type of analysis would you like to perform?",
+		backgroundDismiss: true,
+		columnClass: "col-xs-10 col-xs-offset-1 col-md-6 col-md-offset-3",
+		buttons: {
+			cluster: {
+				text: "Cluster Analysis",
+				action: function() {
+					setCurrentType("cluster")
+					if (currentPlotType != previousPlotType) clearPlot()
+					$("#feature-analysis-select").addClass("collapse")
+					analysisPlot()
+					return true;
+				}
+			},
+			feature: {
+				text: "Feature Analysis",
+				action: function() {
+					setCurrentType("feature")
+					if (currentPlotType != previousPlotType) clearPlot()
+					$("#feature-analysis-select").removeClass("collapse")
+					return true;
+				}
+			}
+		}
+	});
+}
