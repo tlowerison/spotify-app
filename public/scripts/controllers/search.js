@@ -25,6 +25,7 @@ app.controller("Search", function($http, $scope, apiFactory, dataFactory) {
 		})
 	}
 
+	/*
 	$scope.onSearchItemClick = function(type, item) {
 		$scope.searchItem = dataFactory.searchResults[type][item.$index];
 		if (type == 'tracks') {
@@ -49,7 +50,7 @@ app.controller("Search", function($http, $scope, apiFactory, dataFactory) {
 				displaySearchItem(type);
 			});
 		}
-	}
+	}*/
 
 	$scope.onPlotTrackClick = function(features) {
 		features[2] /= dBNorm;

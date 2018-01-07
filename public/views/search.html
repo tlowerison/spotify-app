@@ -2,7 +2,7 @@
 <div class="row" ng-init="init()">
 	<div class="col-sm-12 section" style="margin: 20px">
 		<div class="mdc-text-field">
-			<input type="text" id="search-input" class="mdc-text-field__input" size="25" style="font-size: 200%; font-weight: 500" placeholder="Search" autocomplete="off">
+			<input type="text" id="search-input" class="mdc-text-field__input" size="25" style="font-size: 200%; font-weight: 500; color: #ddd;" placeholder="Search" autocomplete="off">
 			<div class="mdc-text-field__bottom-line"></div>
 		</div>
 	</div>
@@ -12,7 +12,7 @@
 				<h3>Tracks</h3>
 			</div>
 			<ul>
-				<li class="subtitle" ng-repeat="track in searchResults.tracks" ng-click="onSearchItemClick('tracks', this)">{{track.name}}</li>
+				<li class="subtitle" ng-repeat="track in searchResults.tracks"><a class="plain-link" href="/track/{{track.id}}">{{track.name}}</a></li>
 			</ul>
 		</div>
 		<div id="search-albums" class="col-sm-12">
@@ -20,7 +20,7 @@
 				<h3>Albums</h3>
 			</div>
 			<ul>
-				<li class="subtitle" ng-repeat="album in searchResults.albums" ng-click="onSearchItemClick('albums', this)"><a href="/album/{{album.id}}" class="plain-link">{{album.name}}</a></li>
+				<li class="subtitle" ng-repeat="album in searchResults.albums"><a class="plain-link" href="/album/{{album.id}}">{{album.name}}</a></li>
 			</ul>
 		</div>
 		<div id="search-artists" class="col-sm-12">
@@ -28,7 +28,7 @@
 				<h3>Artists</h3>
 			</div>
 			<ul>
-				<li class="subtitle" ng-repeat="artist in searchResults.artists" ng-click="onSearchItemClick('artists', this)"><!--<a href="/artist/{{artist.id}}" class="plain-link">-->{{artist.name}}<!--</a>--></li>
+				<li class="subtitle" ng-repeat="artist in searchResults.artists"><a class="plain-link" href="/artist/{{artist.id}}">{{artist.name}}</a></li>
 			</ul>
 		</div>
 		<div id="search-playlists" class="col-sm-12">
@@ -36,7 +36,7 @@
 				<h3>Playlists</h3>
 			</div>
 			<ul>
-				<li class="subtitle" ng-repeat="playlist in searchResults.playlists" ng-click="onSearchItemClick('playlists', this)"><a href="/user/{{playlist.owner.id}}/playlist/{{playlist.id}}" class="plain-link">{{playlist.name}}</a></li>
+				<li class="subtitle" ng-repeat="playlist in searchResults.playlists"><a class="plain-link" href="/user/{{playlist.owner.id}}/playlist/{{playlist.id}}">{{playlist.name}}</a></li>
 			</ul>
 		</div>
 	</div>

@@ -1,0 +1,48 @@
+<div class="row" style="padding-top: 10px; background-image:url('{{currentObject.images[0].url}}'); background-size:cover; background-position: 0px -166px; height:75vh; position:relative;">
+	<div class="col-xs-12 title section artist-title">{{currentObject.name}}</div>
+	<div class="col-xs-12 image-gradient" style="bottom:0px; height: 50vh; position:absolute;"></div>
+</div>
+<div class="row">
+	<div class="col-xs-12 col-sm-6">
+		<h2 class="section" style="margin-top:0px;padding-top:0px;">Popular</h2>
+		<ol class="nav nav-list list-group row mdc-elevation--z8" style="margin-right: 2px; margin-left:5px;">
+			<li class="list-group-item col-xs-12" ng-repeat="track in currentObject.topTracks" style="padding-top: 0; padding-bottom: 0; display: inline-block;">
+				<h5><span style="font-size: 110%; font-weight: 500"><a class="plain-link" href="/track/{{track.id}}">{{track.name}}</a></span></h5>
+			</li>
+		</ol>
+	</div>
+	<div class="col-xs-12 col-sm-6">
+		<h2 class="section" style="margin-top:0px;padding-top:0px;">Related Artists</h2>
+		<ol class="nav nav-list list-group row mdc-elevation--z8" style="margin-right: 2px; margin-left:5px;">
+			<li class="list-group-item col-xs-12" ng-repeat="artist in currentObject.relatedArtists" style="padding-top: 0; padding-bottom: 0; display: inline-block;">
+				<h5><span style="font-size: 110%; font-weight: 500"><a class="plain-link" href="/artist/{{artist.id}}">{{artist.name}}</a></span></h5>
+			</li>
+		</ol>
+	</div>
+</div>
+<div class="row section">
+	<div class="col-xs-12">
+		<h2 class="section" style="margin-top:0px;padding-top:0px;">Albums</h2>
+	</div>
+</div>
+<div class="row section">
+	<div class="col-xs-6 col-sm-4 col-md-3 col-lg-2 col-xl-2 img-row" ng-repeat="album in currentObject.albums">
+		<a class="plain-link" href="/album/{{album.id}}">
+			<img class="img-sm mdc-elevation--z10" src="{{album.images[0].url}}">
+			<h2 class="object-title">{{album.name}}</h2>
+		</a>
+	</div>
+</div>
+<div class="row section">
+	<div class="col-xs-12">
+		<h2 class="section" style="margin-top:0px;padding-top:0px;">Singles</h2>
+	</div>
+</div>
+<div class="row section">
+	<div class="col-xs-6 col-sm-4 col-md-3 col-lg-2 col-xl-2 img-row" ng-repeat="single in currentObject.singles">
+		<a class="plain-link" href="/album/{{single.id}}">
+			<img class="img-sm mdc-elevation--z10" src="{{single.images[0].url}}">
+			<h2 class="object-title">{{album.name}}</h2>
+		</a>
+	</div>
+</div>

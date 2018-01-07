@@ -7,6 +7,10 @@ var app = angular.module("MyApp", ["ngRoute", "ngTouch", "cp.ngConfirm", "LocalS
 	.when("/", {
 		templateUrl: "views/home.html"
 	})
+	.when("/recommendations", {
+		templateUrl: "views/recommendations.html",
+		controller: "Recommendations"
+	})
 	.when("/tokens/:access_token/:refresh_token", {
 		templateUrl: "views/home.html"
 	})

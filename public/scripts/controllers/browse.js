@@ -7,9 +7,9 @@ app.controller("Browse", function($scope, $http, $location, apiFactory, dataFact
 		var now = new Date()
 		var timestamps = [
 			now.toISOString(),
-			new Date(now.getTime() - 1000 * 60 * 60 * 2).toISOString(),
-			new Date(now.getTime() - 1000 * 60 * 60 * 4).toISOString(),
-			new Date(now.getTime() - 1000 * 60 * 60 * 8).toISOString()
+			new Date(now.getTime() - 1000 * 60 * 60 * 3).toISOString(),
+			new Date(now.getTime() - 1000 * 60 * 60 * 6).toISOString(),
+			new Date(now.getTime() - 1000 * 60 * 60 * 9).toISOString()
 		];
 
 		$scope.featuredPlaylists = [];
