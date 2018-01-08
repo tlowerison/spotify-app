@@ -940,7 +940,7 @@ var removedFeatures = [
 var featureNorms = [
 	1,	// Danceability
 	1,	// Energy
-	10, // Loudness: Arbitrary choice, but most songs don't display loudness below -10dB
+	-10, // Loudness: Arbitrary choice, but most songs don't display loudness below -10dB
 	1,	// Speechiness
 	1,	// Acousticness
 	1,  // Instrumentalness

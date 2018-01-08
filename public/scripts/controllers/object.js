@@ -97,6 +97,18 @@ app.controller("Object", function($scope, $http, $location, apiFactory, dataFact
 					$scope.currentObject.audioFeatures = Object.entries(res.data).map(function(e) {
 						return { axis: toTitleCase(e[0]), value: e[1] };
 					});
+					var plotData = [Object.entries(res.data).map(function(e, i) {
+						if (i == 2) return { axis: toTitleCase(e[0]), value: (1 - e[1] / featureNorms[2]), index: i };
+						else return { axis: toTitleCase(e[0]), value: e[1] / featureNorms[i], index: i };
+					})];
+					var color = d3v3.scale.ordinal()
+						.range([randomColor({ luminosity: "light" }).toUpperCase()]);
+					var radarChartOptions = {
+						levels: 5,
+						roundStrokes: true,
+						color: color
+					};
+					RadarChart(".radarChart", plotData, radarChartOptions);
 				});
 				apiFactory.call("Get Audio Analysis for a Track", { id: id })
 				.then(function(res) {

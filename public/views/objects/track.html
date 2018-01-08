@@ -5,20 +5,8 @@
 	<div class="col-xs-12 section" style="color:#ccc"><h4><a class="plain-link" href="/artist/{{artist.id}}" ng-repeat="artist in currentObject.artists"><span style="display: inline-block; margin-right: 12px; font-weight: 400">{{artist.name}}</span></a></h4></div>
 </div>
 <div class="row">
-	<div class="col-xs-12 col-sm-6">
-		<h2 class="section" style="margin-top:0px;padding-top:0px;">Audio Features</h2>
-		<ol class="nav nav-list list-group row mdc-elevation--z8" style="margin-right: 2px; margin-left:5px;">
-			<li class="list-group-item col-xs-12" ng-repeat="feature in currentObject.audioFeatures" style="padding-top: 0; padding-bottom: 0; display: inline-block;">
-				<h5><span style="font-size: 110%; font-weight: 500">{{feature.axis}}</span><span style="float: right; display: inline-block; margin-right: 7px; font-weight: 400">{{ feature.value | number: 4 }}{{ key | featureUnits}}</span></h5>
-			</li>
-		</ol>
-	</div>
-	<div class="col-xs-12 col-sm-6">
-		<h2 class="section" style="margin-top:0px;padding-top:0px;">Related Artists</h2>
-		<ol class="nav nav-list list-group row mdc-elevation--z8" style="margin-right: 2px; margin-left:5px;">
-			<li class="list-group-item col-xs-12" ng-repeat="artist in currentObject.relatedArtists" style="padding-top: 0; padding-bottom: 0; display: inline-block;">
-				<h5><span style="font-size: 110%; font-weight: 500"><a class="plain-link" href="/artist/{{artist.id}}">{{artist.name}}</a></span></h5>
-			</li>
-		</ol>
+	<div id="track-audio-features" class="col-xs-12 col-sm-6 col-sm-offset-3">
+		<!--<h2 class="section" style="margin-top:0px;padding-top:0px;">Audio Features</h2>-->
+		<div class="radarChart"></div>
 	</div>
 </div>
