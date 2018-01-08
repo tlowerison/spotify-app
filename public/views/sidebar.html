@@ -8,12 +8,12 @@
 				<span class="icon-bar"></span>
 				<span class="icon-bar"></span>
 			</button>
-			<a class="navbar-brand sidebar-link" href="/">Home</a>
+			<a class="navbar-brand sidebar-link" href="/login" target="_self">Login</a>
 		</div>
 		<!-- Collect the nav links, forms, and other content for toggling -->
 		<div id="sidebar" class="collapse navbar-collapse">
 			<ul class="nav navbar-nav sidebar-nav">
-				<li id="sidebar-browse"><a href="/browse">Browse</a></li>
+				<li id="sidebar-browse"><a class="sidebar-link" href="/browse">Browse</a></li>
 				<li id="sidebar-library">
 					<a class="sidebar-link" href="#" class="active subtitle" data-toggle="collapse" data-target="#library">Your Music</a>
 					<ul id="library" class="collapse">	
@@ -31,9 +31,8 @@
 						</li>
 					</ul>
 				</li>
-				<li id="sidebar-search"><a href="/search">Search</a></li>
-				<li id="sidebar-logout"><a href="#" ng-click="loggedOutSidebar()">Logout</a></li>
-				<li id="sidebar-login" style="width:100%;display:inline-block;"><a href="/login" target="_self">Login</a></li>
+				<li id="sidebar-search"><a class="sidebar-link" href="/search">Search</a></li>
+				<li id="sidebar-logout"><a class="sidebar-link" href="#" ng-click="loggedOutSidebar()">Logout</a></li>
 			</ul>
 		</div>
 	</div>

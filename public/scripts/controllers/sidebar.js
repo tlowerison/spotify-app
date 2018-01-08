@@ -1,17 +1,21 @@
 app.controller("Sidebar", function($scope, $http, $location, $routeParams, logInFactory, localStorageService) {
 	function loggedInSidebar() {
+		$(".navbar-brand").attr("href", "/")
+		$(".navbar-brand").html("Home")
+		$("#sidebar-login").hide()
 		$("#sidebar-browse").show()
 		$("#sidebar-library").show()
 		$("#sidebar-search").show()
-		$("#sidebar-login").hide()
 		$("#sidebar-logout").show()
 	}
 
 	$scope.loggedOutSidebar = function() {
+		$(".navbar-brand").attr("href", "/login")
+		$(".navbar-brand").html("Login")
+		$(".navbar-toggle").hide()
 		$("#sidebar-browse").hide()
 		$("#sidebar-library").hide()
 		$("#sidebar-search").hide()
-		$("#sidebar-login").show()
 		$("#sidebar-logout").hide()
 		removeSpotifyTokens($http, localStorageService)
 		$http.post("/logout", { tmpsId: tmpsId })
