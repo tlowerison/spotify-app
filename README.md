@@ -4,7 +4,7 @@ Developed by Trey Lowerison<br />
 Stack: Express AngularJS Node.js Python Scikit-Learn RabbitMQ<br />
 <br />
 Mobile and web apps are up and working!<br />
-<a href="https://spotifynoiseinjection.herokuapp.com">Noisify</a><br />
+<a href="https://spotifynoiseinjection.herokuapp.com">Spotify by the numbers.</a><br />
 <br />
 The app provides basic feature analysis on your Saved Tracks, Saved Albums, Playlists and Recent Tracks.<br />
 If you click "User Model", a Python script will run and build a model of your music preferences.<br />
