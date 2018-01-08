@@ -98,8 +98,11 @@ app.controller("Object", function($scope, $http, $location, apiFactory, dataFact
 						return { axis: toTitleCase(e[0]), value: e[1] };
 					});
 					var plotData = [Object.entries(res.data).map(function(e, i) {
-						if (i == 2) return { axis: toTitleCase(e[0]), value: (1 - e[1] / featureNorms[2]), index: i };
-						else return { axis: toTitleCase(e[0]), value: e[1] / featureNorms[i], index: i };
+						var d = { axis: toTitleCase(e[0]), index: i };
+						if (i == 2) d.value = (1 - e[1] / featureNorms[2])
+						else (i == 9) d.value = e[1] / featureNorms[i] / 2;
+						else d.value = e[1] / featureNorms[i];
+						return d;
 					})];
 					var color = d3v3.scale.ordinal()
 						.range([randomColor({ luminosity: "light" }).toUpperCase()]);

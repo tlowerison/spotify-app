@@ -212,16 +212,13 @@ function RadarChart(id, data, options) {
 				.transition().duration(200)
 				.style('opacity', 1)
 				.style("fill", "#FFFFFF");
-			if (d.index == 2) tooltip.text((-(d.value - 1) * featureNorms[2]).toString() + " dB");
-			else {
-				var num = "";
-				if (d.index == 8 || d.index == 9) num = (d.value * featureNorms[d.index]).toFixed(0);
-				else num = (d.value * featureNorms[d.index]).toFixed(4);
 
-				if (d.index == 8) num += " BPM";
-				else if (d.index == 9) num += "/4";
-				tooltip.text(num)
-			}
+			var num = "";
+			if (d.index == 2) num = (-(d.value - 1) * featureNorms[2]).toFixed(0) + " dB"
+			else if (d.index == 8) num = (d.value * featureNorms[9]).toFixed(0) + " BPM"
+			else if (d.index == 9) num = (d.value * featureNorms[9] * 2).toFixed(0) + "/4"
+			else num = (d.value * featureNorms[d.index]).toFixed(4)
+			tooltip.text(num)
 		})
 		.on("mouseout", function(){
 			tooltip.transition().duration(200)
