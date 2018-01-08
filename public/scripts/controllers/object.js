@@ -99,9 +99,11 @@ app.controller("Object", function($scope, $http, $location, apiFactory, dataFact
 					});
 					var plotData = [Object.entries(res.data).map(function(e, i) {
 						var d = { axis: toTitleCase(e[0]), index: i };
+						
 						if (i == 2) d.value = (1 - e[1] / featureNorms[2])
-						else (i == 9) d.value = e[1] / featureNorms[i] / 2;
+						else if (i == 9) d.value = e[1] / featureNorms[i] / 2
 						else d.value = e[1] / featureNorms[i];
+
 						return d;
 					})];
 					var color = d3v3.scale.ordinal()
