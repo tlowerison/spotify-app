@@ -30,7 +30,7 @@
 	<div class="col-xs-12 col-sm-12">
 		<ol class="nav nav-list list-group row mdc-elevation--z8">
 			<li class="list-group-item col-xs-12" ng-repeat="track in recentlyPlayed.tracks" style="padding-top: 0; padding-bottom: 0; display: inline-block;">
-				<h5><span style="font-size: 110%; font-weight: 500">{{track.name}}</span><a class="plain-link" href="/artist/{{artist.id}}" ng-repeat="artist in track.artists"><span style="float: right; display: inline-block; margin-right: 7px; color: #777; font-weight: 400">{{artist.name}}</span></a></h5>
+				<h5><span style="font-size: 110%; font-weight: 500"><a class="plain-link" href="/track/{{track.id}}">{{track.name}}</a></span><a class="plain-link" href="/artist/{{artist.id}}" ng-repeat="artist in track.artists"><span style="float: right; display: inline-block; margin-right: 7px; color: #777; font-weight: 400">{{artist.name}}</span></a></h5>
 			</li>
 		</ol>
 	</div>
