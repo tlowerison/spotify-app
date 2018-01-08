@@ -1,8 +1,8 @@
 <div ng-init="init('savedTracks')">
 	<div class="row section">
-		<!-- Librrary -->
-		<div class="col-xs-12 col-sm-4">
-			<h2>
+		<div class="col-xs-12 col-md-4 col-md-push-4"><h2 class="title section">Saved Tracks</h2></div>
+		<div class="col-xs-7 col-md-4 col-md-pull-4">
+			<h2 class="library-analysis-button">
 				<div id="user-model">
 					<div class="spinner">
 						<div class="rect1"></div>
@@ -19,14 +19,15 @@
 				</div>
 			</h2>
 		</div>
-		<div class="col-xs-12 col-sm-4"><h2 class="title section">Saved Tracks</h2></div>
-		<h2>
-			<button class="mdc-button mdc-button--raised" ng-click="analysisPopUp('track', savedTracks.overview)" ng-touch="analysisPopUp('track', savedTracks.overview)">
-				<h5 class="subtitle">Analysis</h5>
-			</button>
-		</h2>
+		<div class="col-xs-5 col-sm-4">
+			<h2 class="library-analysis-button">
+				<button class="mdc-button mdc-button--raised" ng-click="analysisPopUp('track', savedTracks.overview)" ng-touch="analysisPopUp('track', savedTracks.overview)">
+					<h5 class="subtitle">Analysis</h5>
+				</button>
+			</h2>
+		</div>
 	</div>
-	<div class="col-xs-12">
+	<div class="col-xs-12 col-sm-12">
 		<ol class="nav nav-list list-group row mdc-elevation--z8">
 			<li class="list-group-item col-xs-12" ng-repeat="track in savedTracks.tracks" style="padding-top: 0; padding-bottom: 0; display: inline-block;">
 				<h5><span style="font-size: 110%; font-weight: 500">{{track.name}}</span><a class="plain-link" href="/artist/{{artist.id}}" ng-repeat="artist in track.artists"><span style="float: right; display: inline-block; margin-right: 7px; color: #777; font-weight: 400">{{artist.name}}</span></a></h5>

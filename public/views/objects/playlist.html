@@ -1,4 +1,4 @@
-<div id="{{currentObject.id}}-sections" class="row" style="padding-top: 10px">
+<div id="{{currentObject.id}}-sections" style="padding-top: 10px">
 	<div class="col-xs-12 col-sm-3">
 		<img class="img-large mdc-elevation--z10 section" src="{{currentObject.images[0].url}}">
 		<h3 class="title-md section">{{currentObject.name}}</h3>
@@ -7,14 +7,12 @@
 				<h4 class="subtitle">Analysis</h4>
 			</button>
 		</div>
-		<div class="row">
-			<ul style="padding-right: 3vw">
-				<li ng-repeat="(key, value) in currentObject.overview.avgSample">{{ key }}:<span style="float: right">{{ value | number: 4 }}{{ key | featureUnits }}</span></li>
-			</ul>
-		</div>
+		<ul style="padding-left:3px; padding-right:3px">
+			<li ng-repeat="(key, value) in currentObject.overview.avgSample">{{ key }}:<span style="float: right">{{ value | number: 4 }}{{ key | featureUnits }}</span></li>
+		</ul>
 	</div>
-	<div class="col-sm-12 col-sm-9">
-		<ol class="nav nav-list list-group row mdc-elevation--z8" style="margin-right: 2px">
+	<div class="col-xs-12 col-sm-9">
+		<ol class="nav nav-list list-group row mdc-elevation--z8">
 			<li class="list-group-item col-xs-12" ng-repeat="track in currentObject.tracks" style="padding-top: 0; padding-bottom: 0; display: inline-block;">
 				<h5><span style="font-size: 110%; font-weight: 500"><a class="plain-link" href="/track/{{track.track_id}}">{{track.name}}</a></span><a class="plain-link" href="/artist/{{artist.artist_id}}" ng-repeat="artist in track.artists"><span style="float: right; display: inline-block; margin-right: 7px; color: #777; font-weight: 400">{{artist.name}}</span></a></h5>
 			</li>
