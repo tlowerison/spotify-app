@@ -684,7 +684,7 @@ app.factory("apiFactory", function($http, logInFactory) {
 				tmpsId: tmpsId
 			}
 
-			/*$http({
+			$http({
 				method: "POST",
 				url: "/tracks-svm",
 				data: body,
@@ -692,7 +692,7 @@ app.factory("apiFactory", function($http, logInFactory) {
 					"Accept": "image/png",
 					"Content-Type": "application/json"
 				}
-			});*/
+			});
 
 			var title = ''
 			+ '<div style="display:inline-block;">' + title + (title == 'Library' ? '' : ':') + ' Analysis' + '</div>'
