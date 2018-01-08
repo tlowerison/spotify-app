@@ -684,7 +684,7 @@ app.factory("apiFactory", function($http, logInFactory) {
 				tmpsId: tmpsId
 			}
 
-			$http({
+			/*$http({
 				method: "POST",
 				url: "/tracks-svm",
 				data: body,
@@ -692,7 +692,7 @@ app.factory("apiFactory", function($http, logInFactory) {
 					"Accept": "image/png",
 					"Content-Type": "application/json"
 				}
-			});
+			});*/
 
 			var title = ''
 			+ '<div style="display:inline-block;">' + title + (title == 'Library' ? '' : ':') + ' Analysis' + '</div>'
@@ -987,8 +987,10 @@ function init(popup, s, l, d) {
 		return {x: e[0], y: e[1], title: labels[i].title, artists: labels[i].artists};
 	});
 	data.decisionFunction = d.decisionFunction;
+	var m = $(window).width() < 768 ? 10 : 300
+	var w = popup.width() - m
 
-	popup.append("<div id=\"svg-wrapper\"><svg id=\"d3svg\" width=\"400\" height=\"400\" stroke=\"#fff\" stroke-width=\"0.5\"></svg></div>");
+	popup.append("<div id=\"svg-wrapper\"><svg id=\"d3svg\" width=\"" + w.toString() + "\" height=\"" + w.toString() + "\" stroke=\"#fff\" stroke-width=\"0.5\"></svg></div>");
 	
 	svg = d3.select("#d3svg");
 	width = +svg.attr("width");
@@ -996,11 +998,10 @@ function init(popup, s, l, d) {
 
 	tooltip = d3.select("#svg-wrapper").append("div")
 	.attr("class", "tooltip container")
-	.style("left", ((popup.width() - 400) / 2).toString() + "px")
-	.style("width", "400px")
-	.style("bottom", "375px")
+	.style("left", (m / 2).toString() + "px")
+	.style("width", w.toString() + "px")
+	.style("bottom", (w - 25).toString() + "px")
 	.style("text-align", "center")
-	.style("color", "white")
 	.style("margin-top", "5px");
 
 	$("#feature-1, #feature-2").change(function() {
@@ -1071,10 +1072,16 @@ function generateClusterAnalysis() {
 	var yScale = d3.scaleLinear().range([height, 0]);
 	var yMap = function(d) { return yScale(yValue(d));};
 
+
 	// setup fill color
 	var cValue = function(d) { return d.Manufacturer;};
 	var dotcolor = d3.scaleOrdinal(d3.schemeCategory10);
 
+	tooltip
+	.style("color", "white")
+
+	var touch = false;
+	var recentDot = undefined
 	// draw dots
 	svg.selectAll(".dot")
 	.data(data.scatter)
@@ -1085,7 +1092,18 @@ function generateClusterAnalysis() {
 	.attr("cy", yMap)
 	.style("fill", function(d) { return dotcolor(cValue(d));}) 
 	.on("mouseover", mouseOverDot)
-	.on("mouseout", mouseOutDot);
+	.on("touchstart", function(d) {
+		touch = true
+		recentDot = d
+	})
+	.on("mouseout", mouseOutDot)
+	svg
+	.on("touchstart", function() {
+		if (touch) {
+			mouseOverDot(recentDot)
+			touch = false
+		} else mouseOutDot(recentDot)
+	})
 }
 
 function generateFeatureAnalysis(feature1, feature2) {
@@ -1105,6 +1123,10 @@ function generateFeatureAnalysis(feature1, feature2) {
 	.map(function(d, i) {
 		return {x: d[0], y: d[1], title: labels[i].title, artists: labels[i].artists};
 	});
+
+
+	tooltip
+	.style("color", "#333")
 
 	// draw dots
 	svg.selectAll(".dot")
