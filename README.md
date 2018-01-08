@@ -3,7 +3,7 @@ Developed by Trey Lowerison<br />
 <br />
 Stack: Express AngularJS Node.js Python Scikit-Learn RabbitMQ<br />
 <br />
-Website is up! Desktop is fully functioning, mobile has a serious UI bug.<br />
+Mobile and web apps are up and working!<br />
 <a href="https://spotifynoiseinjection.herokuapp.com">Noisify</a><br />
 <br />
 The app provides basic feature analysis on your Saved Tracks, Saved Albums, Playlists and Recent Tracks.<br />
