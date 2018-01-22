@@ -1,0 +1,8 @@
+<div class="row">
+	<div class="col-xs-12 section">
+		<h2>Artists Related to {{seedArtist.name}}</h2>
+		<ul>
+			<li ng-repeat="artist in relatedArtists"><a class="plain-link" href="/artist/{{artist.id}}"><h5 class="section">{{artist.name}}</h5></a></li>
+		</ul>
+	</div>
+</div>

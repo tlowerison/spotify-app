@@ -97,6 +97,10 @@ app.factory("dataFactory", function($location, apiFactory, logInFactory) {
 				})
 			});
 		},
+		recentImgPlot: {
+			path: "",
+			type: ""
+		},
 		analysisPopUp: function(title, type, overview) {
 			function removeFocus() {
 				$('.mdc-button.mdc-button--raised').focus(function() {
@@ -120,7 +124,10 @@ app.factory("dataFactory", function($location, apiFactory, logInFactory) {
 						text: 'Train',
 						btnClass: 'btn-blue',
 						action: function() {
-							apiFactory.modelCall(title, 'train', samples, labels)
+							var isCached = service.recentImgPlot.url == $location.path() && service.recentImgPlot.type == "train"
+							apiFactory.modelCall(title, "train", samples, labels, isCached)
+							service.recentImgPlot.url = $location.path()
+							service.recentImgPlot.type = "train"
 							removeFocus()
 							return true
 						}
@@ -129,7 +136,10 @@ app.factory("dataFactory", function($location, apiFactory, logInFactory) {
 						text: 'Test',
 						btnClass: 'btn-blue',
 						action: function() {
-							apiFactory.modelCall(title, 'test', samples, labels)
+							var isCached = service.recentImgPlot.url == $location.path()
+							apiFactory.modelCall(title, "test", samples, labels, isCached)
+							service.recentImgPlot.url = $location.path()
+							service.recentImgPlot.type = "test"
 							removeFocus()
 							return true
 						}

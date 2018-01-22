@@ -119,7 +119,7 @@ function removeTmps(tmpsId) {
 
 // All accessible pages use the basic html index file
 // Individual pages are designed and provided using AngularJS routing
-app.get("/((:page(browse|library|search))|(library/:type(playlists|savedalbums|savedtracks|recentlyplayed))|(:type(playlist|album|artist|track)/:id)|(user/:user/playlist/:id)|(login)|(tokens/:access_token/:refresh_token))", function(req, res) {
+app.get("/((:page(browse|library|search))|(library/:type(playlists|savedalbums|savedtracks|recentlyplayed))|(:type(playlist|album|artist|track)/:id)|(user/:user/playlist/:id)|(login)|(tokens/:access_token/:refresh_token)|(inject-noise))", function(req, res) {
 	res.sendFile(__dirname + '/public/index.html');
 });
 
