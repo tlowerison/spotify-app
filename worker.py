@@ -9,7 +9,7 @@ from sklearn.decomposition import PCA
 from sklearn.cluster import DBSCAN
 from sklearn.externals import joblib
 from os.path import join, dirname
-#from dotenv import load_dotenv
+from dotenv import load_dotenv
 
 def delta(i):
 	return lambda j: 1 if i == j else 0
@@ -113,7 +113,6 @@ class Model:
 dotenv_path = join(dirname(__file__), ".env")
 load_dotenv(dotenv_path)
 CLOUDAMQP_URL = os.environ.get("CLOUDAMQP_URL")
-# CLOUDAMQP_URL = "amqp://wjtbgpmr:mNxIgCcDmFkcJmZnrJl-pJzf64xnYWLX@elephant.rmq.cloudamqp.com/wjtbgpmr"
 
 connection = pika.BlockingConnection(pika.connection.URLParameters(CLOUDAMQP_URL))
 channel = connection.channel()
