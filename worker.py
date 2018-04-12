@@ -6,9 +6,13 @@ import matplotlib.pyplot as plt
 import matplotlib.font_manager as fm
 from sklearn import svm
 from sklearn.decomposition import PCA
+from sklearn.cluster import DBSCAN
 from sklearn.externals import joblib
 from os.path import join, dirname
-from dotenv import load_dotenv
+#from dotenv import load_dotenv
+
+def delta(i):
+	return lambda j: 1 if i == j else 0
 
 # SVM MODEL
 class Model:
@@ -20,7 +24,8 @@ class Model:
 		self.xx, self.yy = np.meshgrid(np.linspace(self.plotX[0], self.plotX[1], 100), np.linspace(self.plotY[0], self.plotY[1], 100))
 		self.methods = {
 			"train": self.train,
-			"test": self.test
+			"test": self.test,
+			"optimize": self.optimize_clustering
 		}
 
 	def train(self, samples, nu=0.25, gamma=5):
@@ -31,6 +36,28 @@ class Model:
 		self.clf.fit(self.X_train)
 		self.y_pred_train = self.clf.predict(self.X_train)
 		sys.stdout.write("model trained\n")
+
+	def optimize_clustering(self, samples):
+		eps = np.arange(0.2, .8, 0.05)
+		minpts = np.arange(3, 7)
+		hyperparams = np.meshgrid(eps, minpts)
+		hyperparams = np.vstack(map(np.ravel, hyperparams)).T
+		errors = np.zeros((hyperparams.shape[0], 1))
+		for hp in enumerate(hyperparams):
+			self.dbscan = DBSCAN(eps=hp[1][0], min_samples=hp[1][1])
+			labels = np.array(self.dbscan.fit_predict(samples))
+			for i in enumerate(np.unique(labels)):
+				i = i[1]
+				deltas = np.vectorize(delta(i))(labels)
+				deltas = np.vstack([deltas for i in range(samples.shape[1])]).T
+				n_i = np.sum(deltas)
+				samples_i = np.multiply(deltas, samples)
+				mu_i = np.sum(samples_i, axis=0) / n_i
+				mu_i = np.multiply(deltas, np.vstack([mu_i for j in range(samples.shape[0])]))
+				errors[hp[0],0] += np.sum(np.square(samples_i - mu_i))
+		hyperparams = hyperparams[np.argmin(errors)]
+		# returns error minimizing clustering of samples
+		return DBSCAN(eps=hyperparams[0], min_samples=hyperparams[1]).fit_predict(samples).tolist()
 
 	def test(self, samples):
 		self.pca = joblib.load(self.pcaPath)
@@ -86,6 +113,7 @@ class Model:
 dotenv_path = join(dirname(__file__), ".env")
 load_dotenv(dotenv_path)
 CLOUDAMQP_URL = os.environ.get("CLOUDAMQP_URL")
+# CLOUDAMQP_URL = "amqp://wjtbgpmr:mNxIgCcDmFkcJmZnrJl-pJzf64xnYWLX@elephant.rmq.cloudamqp.com/wjtbgpmr"
 
 connection = pika.BlockingConnection(pika.connection.URLParameters(CLOUDAMQP_URL))
 channel = connection.channel()
@@ -101,7 +129,7 @@ def task_callback(ch, method, properties, body):
 	modelMethod = lines[1]
 	pcaPath = lines[2]
 	clfPath = lines[3]
-	samples = eval(lines[4])
+	samples = np.matrix(eval(lines[4]))
 	model = Model(pcaPath, clfPath)
 	modelStatus = ""
 	modelData = ""
@@ -111,7 +139,11 @@ def task_callback(ch, method, properties, body):
 		model.plot(modelMethod, levels=64)
 		model.save(savePKL=(modelMethod=="train"))
 		modelStatus = "success"
-		modelData = {"decisionFunction": str(model.decision_function), "scatter": str(model.scatter)} #model.fig_64
+		modelData = {
+			"decisionFunction": str(model.decision_function),
+			"scatter": str(model.scatter),
+			"clusterLabels": str(model.optimize_clustering(samples))
+		} #model.fig_64
 	except Exception as err:
 		sys.stdout.write("Model Error!\n")
 		sys.stdout.write(repr(err) + "\n")

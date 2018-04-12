@@ -864,3 +864,6 @@ var plotContent = ''
 	+ '</div>';
 
 var imgPollRate = 350;
+
+var clusterLabels = [];
+var clusterColors = [];

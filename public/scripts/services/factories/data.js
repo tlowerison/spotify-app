@@ -6,6 +6,7 @@ app.factory("dataFactory", function($location, apiFactory, logInFactory) {
 		recentlyPlayed: [],
 		allFeatureSamples: [],
 		allFeatureLabels: [],
+		allFeatureIds: [],
 		currentObject: {},
 		searchResults: {
 			"tracks": [],
@@ -111,9 +112,11 @@ app.factory("dataFactory", function($location, apiFactory, logInFactory) {
 			if (type == "library") {
 				samples = service.allFeatureSamples
 				labels = service.allFeatureLabels
+				ids = service.allFeatureIds
 			} else {
 				samples = overview.samples
 				labels = overview.labels
+				ids = overview.ids
 			}
 			
 			$.confirm({
@@ -125,7 +128,7 @@ app.factory("dataFactory", function($location, apiFactory, logInFactory) {
 						btnClass: 'btn-blue',
 						action: function() {
 							var isCached = service.recentImgPlot.url == $location.path() && service.recentImgPlot.type == "train"
-							apiFactory.modelCall(title, "train", samples, labels, isCached)
+							apiFactory.modelCall(title, "train", samples, labels, ids, isCached)
 							service.recentImgPlot.url = $location.path()
 							service.recentImgPlot.type = "train"
 							removeFocus()
@@ -137,7 +140,7 @@ app.factory("dataFactory", function($location, apiFactory, logInFactory) {
 						btnClass: 'btn-blue',
 						action: function() {
 							var isCached = service.recentImgPlot.url == $location.path()
-							apiFactory.modelCall(title, "test", samples, labels, isCached)
+							apiFactory.modelCall(title, "test", samples, labels, ids, isCached)
 							service.recentImgPlot.url = $location.path()
 							service.recentImgPlot.type = "test"
 							removeFocus()
@@ -259,9 +262,10 @@ app.factory("dataFactory", function($location, apiFactory, logInFactory) {
 						dest.overview = {
 							samples: res.samples,
 							avgSample: res.avgSample,
-							labels: res.labels
+							labels: res.labels,
+							ids: res.ids
 						};
-						if (append)	appendToAll(res.samples, res.labels);
+						if (append)	appendToAll(res.samples, res.labels, res.ids);
 						resolve();
 					});
 				}));
@@ -319,10 +323,11 @@ app.factory("dataFactory", function($location, apiFactory, logInFactory) {
 		return blockPromises;
 	}
 
-	function appendToAll(samples, labels) {
+	function appendToAll(samples, labels, ids) {
 		if (samples == undefined || labels == undefined) return;
 		service.allFeatureSamples = service.allFeatureSamples.concat(samples);
 		service.allFeatureLabels = service.allFeatureLabels.concat(labels);
+		service.allFeatureIds = service.allFeatureIds.concat(ids);
 	}
 
 	service["getOverview"] = getOverview;

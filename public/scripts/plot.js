@@ -1,12 +1,23 @@
-function plotInit(popup, s, l, d) {
+function plotInit(popup, s, l, d, ids) {
 	labels = l;
 	// transpose samples matrix to a features matrix
 	features = s[0].map((col, i) => s.map(row => row[i]))
-
+	
 	// provide all data with position title and artist information
 	data.scatter = d.scatter.map(function(e, i) {
-		return {x: e[0], y: e[1], title: labels[i].title, artists: labels[i].artists};
+		return {
+			x: e[0],
+			y: e[1],
+			title: labels[i].title,
+			artists: labels[i].artists,
+			id: ids[i],
+			clusterLabel: d.clusterLabels[i]
+		};
 	});
+
+	clusterLabels = d.clusterLabels.filter((value, index, self) => {return self.indexOf(value) === index;})
+	clusterColors = Array.from(clusterLabels, x => '#' + (Math.random()*0xFFFFFF<<0).toString(16))
+
 	data.decisionFunction = d.decisionFunction;
 	var m = $(window).width() < 768 ? 10 : 300
 	var w = popup.width() - m
@@ -96,7 +107,9 @@ function generateClusterAnalysis() {
 
 	// setup fill color
 	var cValue = function(d) { return d.Manufacturer;};
-	var dotcolor = d3.scaleOrdinal(d3.schemeCategory10);
+	var dotColor = function(d) {
+		return clusterColors[clusterLabels.indexOf(d.clusterLabel)];
+	}
 
 	tooltip
 	.style("color", "white")
@@ -111,13 +124,16 @@ function generateClusterAnalysis() {
 	.attr("r", 3.5)
 	.attr("cx", xMap)
 	.attr("cy", yMap)
-	.style("fill", function(d) { return dotcolor(cValue(d));}) 
+	.style("fill", function(d) { return dotColor(d);}) 
 	.on("mouseover", mouseOverDot)
 	.on("touchstart", function(d) {
 		touch = true
 		recentDot = d
 	})
 	.on("mouseout", mouseOutDot)
+	.on("click", function(d) {
+		window.open("https://spotifynoiseinjection.herokuapp.com/track/" + d.id);
+	})
 	svg
 	.on("touchstart", function() {
 		if (touch) {

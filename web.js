@@ -198,7 +198,8 @@ open.then(function(conn) {
 					tmps[res.id].status = res.status;
 					tmps[res.id].data = {
 						decisionFunction: JSON.parse(res.decisionFunction),
-						scatter: JSON.parse(res.scatter)
+						scatter: JSON.parse(res.scatter),
+						clusterLabels: JSON.parse(res.clusterLabels)
 					}
 				} catch(err) { }
 				ch.ack(msg);

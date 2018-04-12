@@ -14,13 +14,13 @@ app.factory("apiFactory", function($http, logInFactory) {
 				return endpoints[endpoint](data)
 			})
 		},
-		modelCall: function(title, method, samples, labels, isCached) {
+		modelCall: function(title, method, samples, labels, ids, isCached) {
 			function pollImgStatus() {
 				$http.get("/img-status?tmpsId=" + tmpsId)
 				.then(function(res) {
 					if (res.data.status != "loading") {
 						$(".spinner").fadeOut(function() {
-							plotInit($("#analysis-popup"), samples, labels, res.data.data)
+							plotInit($("#analysis-popup"), samples, labels, res.data.data, ids)
 							generateClusterAnalysis()
 						})
 					} else setTimeout(pollImgStatus, imgPollRate)
@@ -43,28 +43,30 @@ app.factory("apiFactory", function($http, logInFactory) {
 				})
 			}
 
-			var plotTitle = ''
-				+ '<div style="display:inline-block;">' + title + (title == 'Library' ? '' : ':') + ' Analysis' + '</div>'
-				+ '<button class="mdc-button collapsed" style="display:inline-block; margin-left:3px;padding:0px;" onclick="analysisOptions()">'
-					+ '<h3 style="margin:0px; padding-left:3px; padding-right:3px;">•••</h3>'
-				+ '</button>'
+			if (method == "train" || method == "test") {
+				var plotTitle = ''
+					+ '<div style="display:inline-block;">' + title + (title == 'Library' ? '' : ':') + ' Analysis' + '</div>'
+					+ '<button class="mdc-button collapsed" style="display:inline-block; margin-left:3px;padding:0px;" onclick="analysisOptions()">'
+						+ '<h3 style="margin:0px; padding-left:3px; padding-right:3px;">•••</h3>'
+					+ '</button>'
 
-			$.alert({
-				title: plotTitle,
-				content: plotContent,
-				backgroundDismiss: true,
-				columnClass: "col-xs-12 col-md-8 col-md-offset-2",
-				buttons: {
-					close: {
-						text: "Close",
-						action: function() {
-							return true
+				$.alert({
+					title: plotTitle,
+					content: plotContent,
+					backgroundDismiss: true,
+					columnClass: "col-xs-12 col-md-8 col-md-offset-2",
+					buttons: {
+						close: {
+							text: "Close",
+							action: function() {
+								return true
+							}
 						}
 					}
-				}
-			})
+				})
 
-			pollImgStatus()
+				pollImgStatus()
+			}
 		},
 		parseTracklistFeatures: function(tracklist) {
 			return new Promise(function(RESOLVE) {
@@ -158,7 +160,8 @@ app.factory("apiFactory", function($http, logInFactory) {
 					RESOLVE({
 						samples: samples,
 						avgSample: avgSample,
-						labels: labels
+						labels: labels,
+						ids: tracklist.map((t) => {return t.track_id})
 					})
 				})
 			})
